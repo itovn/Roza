@@ -51,7 +51,14 @@ static NSString *RZSummary(id v) {
 
 + (UITabBarController *)tabs {
     UIViewController *r = [UIApplication sharedApplication].keyWindow.rootViewController;
+    if ([r isKindOfClass:[UISplitViewController class]] && ((UISplitViewController *)r).viewControllers.count)
+        r = [((UISplitViewController *)r).viewControllers objectAtIndex:0];  // iPad: các thẻ ở bên trái
     return [r isKindOfClass:[UITabBarController class]] ? (UITabBarController *)r : nil;
+}
+
+/// Thanh điều hướng có màn chat: iPad = bên phải, iPhone = thẻ đang chọn.
++ (UINavigationController *)chatNav {
+    return RZDetailNav() ?: [self nav];
 }
 
 + (UINavigationController *)nav {
@@ -132,9 +139,31 @@ static NSString *RZSummary(id v) {
         id d = [UIApplication sharedApplication].delegate;
         if ([d respondsToSelector:@selector(setDarkMode:)]) [d setDarkMode:[arg boolValue]];
     } else if ([cmd isEqualToString:@"back"]) {
-        [[self nav] popViewControllerAnimated:YES];
+        UINavigationController *d = RZDetailNav();
+        if (d && d.viewControllers.count > 1) [d popViewControllerAnimated:YES];
+        else [[self nav] popViewControllerAnimated:YES];
+    } else if ([cmd isEqualToString:@"close"]) {
+        RZCloseChat(RZOpenThread());  // iPad: về màn trống bên phải
+    } else if ([cmd isEqualToString:@"orient"]) {
+        // orient 1|2|3|4 (dọc, dọc ngược, ngang trái, ngang phải) — API riêng của UIDevice, chỉ có ở bản thử
+        // iOS 5 cần setOrientation:animated: (setOrientation: không làm app xoay)
+        UIDevice *dev = [UIDevice currentDevice];
+        NSInteger o = [arg integerValue];
+        BOOL anim = YES;
+        SEL sel = NSSelectorFromString(@"setOrientation:animated:");
+        if (![dev respondsToSelector:sel]) sel = NSSelectorFromString(@"setOrientation:");
+        if ([dev respondsToSelector:sel]) {
+            NSMethodSignature *sig = [dev methodSignatureForSelector:sel];
+            NSInvocation *inv = [NSInvocation invocationWithMethodSignature:sig];
+            inv.selector = sel;
+            inv.target = dev;
+            [inv setArgument:&o atIndex:2];
+            if (sig.numberOfArguments > 3) [inv setArgument:&anim atIndex:3];
+            [inv invoke];
+        }
+        [UIViewController attemptRotationToDeviceOrientation];
     } else {
-        RZChatViewController *chat = (RZChatViewController *)[self nav].topViewController;
+        RZChatViewController *chat = (RZChatViewController *)[self chatNav].topViewController;
         if (![chat isKindOfClass:[RZChatViewController class]]) {
             RZLog(@"[thử] không có chat đang mở");
             return;

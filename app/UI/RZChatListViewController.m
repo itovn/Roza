@@ -1,4 +1,5 @@
 #import "RZChatListViewController.h"
+#import "RZAppDelegate.h"
 #import "RZContactsViewController.h"
 #import "RZHiddenListViewController.h"
 #import "RZCore.h"
@@ -171,6 +172,9 @@
     self.navigationItem.rightBarButtonItem = [[UIBarButtonItem alloc] initWithImage:[RZTheme icon:@"compose" color:[UIColor whiteColor] size:20]
                                                                               style:UIBarButtonItemStylePlain target:self action:@selector(compose)];
     [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(onEvent:) name:RZCoreEventNotification object:nil];
+    // iPad: tô hàng của cuộc trò chuyện đang mở bên phải
+    self.clearsSelectionOnViewWillAppear = !RZPad();
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(markOpenThread) name:RZOpenThreadChanged object:nil];
     [self reload];
     [RZCore call:@"net.state" args:nil done:^(id ok, NSDictionary *err) {
         [self setNetState:RZStr([ok objectForKey:@"state"])];
@@ -183,8 +187,27 @@
 
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
+    if (RZPad()) {
+        [self markOpenThread];
+        return;
+    }
     NSIndexPath *sel = self.tableView.indexPathForSelectedRow;
     if (sel) [self.tableView deselectRowAtIndexPath:sel animated:animated];
+}
+
+/// iPad: chọn (tô) hàng của chat đang mở bên phải, bỏ chọn nếu không có.
+- (void)markOpenThread {
+    if (!RZPad() || !self.isViewLoaded) return;
+    NSString *open = RZOpenThread();
+    NSIndexPath *want = nil;
+    for (NSUInteger i = 0; open && i < self.shown.count; i++)
+        if ([RZStr([[self.shown objectAtIndex:i] objectForKey:@"key"]) isEqualToString:open]) {
+            want = [NSIndexPath indexPathForRow:i inSection:0];
+            break;
+        }
+    NSIndexPath *cur = self.tableView.indexPathForSelectedRow;
+    if (cur && ![cur isEqual:want]) [self.tableView deselectRowAtIndexPath:cur animated:NO];
+    if (want && ![cur isEqual:want]) [self.tableView selectRowAtIndexPath:want animated:NO scrollPosition:UITableViewScrollPositionNone];
 }
 
 - (void)reload {
@@ -200,6 +223,7 @@
     if (self.hiddenShown && q.length == 4) {
         self.shown = self.hiddenShown;
         [self.tableView reloadData];
+        [self markOpenThread];
         return;
     }
     self.hiddenShown = nil;
@@ -212,6 +236,7 @@
         self.shown = a;
     }
     [self.tableView reloadData];
+    [self markOpenThread];
     [self updateBadge];
 }
 

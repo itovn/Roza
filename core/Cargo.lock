@@ -1139,7 +1139,7 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "rz-cli"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "base64 0.22.1",
  "rz-zalo",
@@ -1149,7 +1149,7 @@ dependencies = [
 
 [[package]]
 name = "rz-core"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "base64 0.22.1",
  "flate2",
@@ -1166,7 +1166,7 @@ dependencies = [
 
 [[package]]
 name = "rz-ffi"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "rz-core",
  "serde_json",
@@ -1175,7 +1175,7 @@ dependencies = [
 
 [[package]]
 name = "rz-zalo"
-version = "0.1.0"
+version = "1.1.0"
 dependencies = [
  "aes",
  "aes-gcm",

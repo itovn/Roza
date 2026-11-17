@@ -50,3 +50,7 @@ thử trên iPad mini 1 / iPad 1; commit git.
 - Bản phát hành 1.0.0, nguồn Cydia https://itovn.github.io/Roza/cydia/, mã nguồn https://github.com/itovn/Roza (D19).
 
 Còn mở: bố cục riêng cho iPad (UISplitViewController); lịch sử nhóm bị `isFiltered`; Google Drive (sao lưu).
+
+## 17/11/2026 (khuya) — Giao diện iPad
+
+- Màn chia đôi trên iPad: danh sách bên trái, chat bên phải, cả dọc và ngang; đăng nhập căn giữa (D20). Phát hành bản 1.1.0.

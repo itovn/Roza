@@ -30,17 +30,20 @@
     logo.textAlignment = RZAlignCenter;
     logo.shadowColor = [UIColor colorWithWhite:0 alpha:0.2];
     logo.shadowOffset = CGSizeMake(0, 1);
-    logo.frame = CGRectMake(0, b.size.height > 500 ? 40 : 18, W, 48);
-    logo.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    // iPad: khối nội dung (cao ~504) đặt giữa màn, giữ giữa khi xoay
+    BOOL pad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+    UIViewAutoresizing mid = pad ? UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin : 0;
+    logo.frame = CGRectMake(0, pad ? floorf((b.size.height - 504) / 2 - 20) : (b.size.height > 500 ? 40 : 18), W, 48);
+    logo.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
     [self.view addSubview:logo];
     UILabel *sub = RZLabel(14, NO, [UIColor colorWithWhite:1 alpha:0.85]);
-    sub.text = @"Nhắn tin Zalo trên iPhone đời cũ";
+    sub.text = pad ? @"Nhắn tin Zalo trên iPad đời cũ" : @"Nhắn tin Zalo trên iPhone đời cũ";
     sub.textAlignment = RZAlignCenter;
     sub.frame = CGRectMake(0, CGRectGetMaxY(logo.frame), W, 20);
-    sub.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    sub.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
     [self.view addSubview:sub];
 
-    CGFloat card = 236;
+    CGFloat card = pad ? 300 : 236;  // iPad: mã to hơn cho dễ quét
     self.qrCard = [[UIView alloc] initWithFrame:CGRectMake((W - card) / 2, CGRectGetMaxY(sub.frame) + 18, card, card)];
     self.qrCard.backgroundColor = [UIColor whiteColor];
     self.qrCard.layer.cornerRadius = 12;
@@ -48,7 +51,7 @@
     self.qrCard.layer.shadowOpacity = 0.25;
     self.qrCard.layer.shadowOffset = CGSizeMake(0, 2);
     self.qrCard.layer.shadowRadius = 6;
-    self.qrCard.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+    self.qrCard.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | mid;
     [self.view addSubview:self.qrCard];
     self.qr = [[UIImageView alloc] initWithFrame:CGRectInset(self.qrCard.bounds, 10, 10)];
     self.qr.layer.magnificationFilter = kCAFilterNearest;
@@ -73,14 +76,16 @@
     self.status.numberOfLines = 2;
     self.status.lineBreakMode = RZBreakWord;
     self.status.frame = CGRectMake(16, CGRectGetMaxY(self.qrCard.frame) + 12, W - 32, 42);
-    self.status.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    self.status.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
     [self.view addSubview:self.status];
     self.steps = RZLabel(13, NO, [UIColor colorWithWhite:1 alpha:0.9]);
     self.steps.numberOfLines = 0;
     self.steps.lineBreakMode = RZBreakWord;
     self.steps.text = @"1. Mở app Zalo trên điện thoại khác\n2. Bấm nút quét mã QR (góc trên)\n3. Quét mã này rồi bấm «Đăng nhập»";
-    self.steps.frame = CGRectMake(30, CGRectGetMaxY(self.status.frame) + 4, W - 60, 60);
-    self.steps.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    CGFloat sw = pad ? 290 : W - 60;  // iPad: cột hướng dẫn hẹp, đặt giữa
+    self.steps.frame = CGRectMake(floorf((W - sw) / 2), CGRectGetMaxY(self.status.frame) + 4, sw, 60);
+    self.steps.autoresizingMask = pad ? UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | mid
+                                      : UIViewAutoresizingFlexibleWidth;
     [self.view addSubview:self.steps];
     UILabel *note = RZLabel(11, NO, [UIColor colorWithWhite:1 alpha:0.7]);
     note.numberOfLines = 3;
@@ -168,7 +173,7 @@
 }
 
 - (BOOL)shouldAutorotateToInterfaceOrientation:(UIInterfaceOrientation)o {
-    return UIInterfaceOrientationIsPortrait(o);
+    return UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad || UIInterfaceOrientationIsPortrait(o);
 }
 
 @end

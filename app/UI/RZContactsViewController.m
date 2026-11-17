@@ -1,4 +1,5 @@
 #import "RZContactsViewController.h"
+#import "RZAppDelegate.h"
 #import "RZCore.h"
 #import "RZImages.h"
 #import "RZKit.h"
@@ -195,7 +196,8 @@
     [self.search resignFirstResponder];
     NSString *thread = [@"u" stringByAppendingString:RZStr([u objectForKey:@"uid"]) ?: @""];
     UINavigationController *nav = self.navigationController;
-    if (self.picker) [nav popViewControllerAnimated:NO];
+    if (RZPad()) [tv deselectRowAtIndexPath:ip animated:YES];  // iPad: chat mở bên phải, danh bạ vẫn hiện
+    if (self.picker) [nav popViewControllerAnimated:RZPad()];
     RZOpenChat(nav, thread, RZStr([u objectForKey:@"name"]), RZStr([u objectForKey:@"avatar"]));
 }
 

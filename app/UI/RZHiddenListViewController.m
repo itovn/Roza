@@ -1,4 +1,5 @@
 #import "RZHiddenListViewController.h"
+#import "RZAppDelegate.h"
 #import "RZChatListViewController.h"
 #import "RZCore.h"
 #import "RZImages.h"
@@ -9,6 +10,7 @@ void RZHideThread(NSString *thread, void (^done)(BOOL ok)) {
     void (^hide)(void) = ^{
         [RZCore call:@"hidden.set" args:@{@"thread": thread ?: @"", @"hidden": @YES} done:^(id ok, NSDictionary *err) {
             if (err) RZAlert(@"Chưa ẩn được", RZErrorText(err));
+            else RZCloseChat(thread);  // iPad: chat vừa ẩn đang mở bên phải → đóng
             if (done) done(err == nil);
         }];
     };

@@ -183,3 +183,20 @@ Thiết kế đầy đủ: [THIET-KE.md](THIET-KE.md).
   https://itovn.github.io/Roza/cydia/ (`tools/update-cydia-repo.sh`). Đường dẫn GitHub Pages phân biệt hoa thường → tên repo là
   «Roza» (github.com/itovn/roza vẫn mở được).
 - Ảnh trên trang: không lộ tên, số điện thoại, bạn bè, nhóm; mã QR làm mờ; xoá nút AssistiveTouch khỏi ảnh chụp.
+
+## D20. Giao diện iPad: màn chia đôi (UISplitViewController) — 17/11/2026
+
+- Anh yêu cầu làm giao diện riêng cho iPad. iPad: gốc cửa sổ là `UISplitViewController` (iOS 5 / 6 bắt buộc làm gốc) — bên trái
+  nguyên bộ thẻ như iPhone (rộng 320), bên phải `UINavigationController` chứa cuộc trò chuyện; chưa mở chat thì màn trống «Chọn
+  một cuộc trò chuyện». Delegate `shouldHideViewController` → NO: luôn hiện cả hai cột, cả chiều dọc (như app Tin nhắn trên iPad).
+- Mọi chỗ mở chat đi qua `RZOpenChat` → iPad thay chat bên phải (`setViewControllers`), không đẩy vào cột trái; chat đang mở thì
+  chỉ quay về màn chat. Danh sách chat tô hàng của chat đang mở (`RZOpenThreadChanged`); Danh bạ / Nhóm bỏ chọn sau khi mở.
+  Ẩn trò chuyện đang mở bên phải → đóng về màn trống (`RZCloseChat`). Đổi chế độ sáng / tối dựng lại giao diện → mở lại chat cũ.
+- Màn chat theo bề rộng mới khi xoay (bên phải 703 ↔ 447): `viewWillLayoutSubviews` xếp lại ô nhập, tính lại cỡ bong bóng
+  (`reloadData`, giữ cuộn cuối); bảng sticker xếp lại lưới theo bề rộng. Lỗi bắt được khi thử: khung tiêu đề hai dòng co giãn theo
+  thanh trên → xoay dọc co về 0, mất tiêu đề → khung giữ bề rộng (iPad 320), chỉ căn giữa.
+- Đăng nhập trên iPad: khối nội dung đặt giữa màn (giữ giữa khi xoay), mã QR 300 điểm, cho xoay mọi chiều.
+- Thử: iPad mini 1 (iOS 6.1.3) ngang + dọc, sticker, chế độ tối, Danh bạ, Thêm; iPad 1 (iOS 5.1.1) dọc. Dữ liệu thử chép từ iPhone,
+  chặn `wpa.chat.zalo.me` để không đá phiên của iPhone; thử xong xoá phiên trên iPad, gỡ chặn. `cbsymcheck` 418 / 418.
+  Lệnh thử mới (bản debug): `orient 1|2|3|4` (API riêng UIDevice), `close`. iPad 1 không xoay được bằng lệnh (khoá xoay?) — chiều
+  ngang trên iOS 5 chưa thử lại.

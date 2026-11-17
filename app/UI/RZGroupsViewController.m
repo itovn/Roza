@@ -1,4 +1,5 @@
 #import "RZGroupsViewController.h"
+#import "RZAppDelegate.h"
 #import "RZCore.h"
 #import "RZImages.h"
 #import "RZKit.h"
@@ -100,6 +101,7 @@
 
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)ip {
     NSDictionary *g = [self.groups objectAtIndex:ip.row];
+    if (RZPad()) [tv deselectRowAtIndexPath:ip animated:YES];  // iPad: chat mở bên phải, danh sách nhóm vẫn hiện
     RZOpenChat(self.navigationController, [@"g" stringByAppendingString:RZStr([g objectForKey:@"gid"]) ?: @""], RZStr([g objectForKey:@"name"]),
                RZStr([g objectForKey:@"avatar"]));
 }

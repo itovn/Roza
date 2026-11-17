@@ -1,6 +1,7 @@
 #import "RZAppDelegate.h"
 #import "RZBackground.h"
 #import "RZChatListViewController.h"
+#import "RZChatViewController.h"
 #import "RZContactsViewController.h"
 #import "RZCore.h"
 #import "RZGroupsViewController.h"
@@ -13,11 +14,78 @@
 #import "RZDebug.h"
 #endif
 
-@interface RZAppDelegate ()
+NSString *const RZOpenThreadChanged = @"RZOpenThreadChanged";
+
+BOOL RZPad(void) {
+    return UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+}
+
+/// Bên phải khi chưa mở cuộc trò chuyện nào (iPad).
+@interface RZEmptyDetailViewController : UIViewController
+@end
+
+@implementation RZEmptyDetailViewController
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    self.view.backgroundColor = RZChatBg();
+    CGRect b = self.view.bounds;
+    UIView *box = [[UIView alloc] initWithFrame:CGRectMake((b.size.width - 300) / 2, (b.size.height - 170) / 2 - 20, 300, 170)];
+    box.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin |
+                           UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+    UIImageView *icon = [[UIImageView alloc] initWithImage:[RZTheme tabIcon:0 selected:NO]];
+    icon.frame = CGRectMake(110, 0, 80, 80);
+    icon.contentMode = UIViewContentModeScaleAspectFit;
+    icon.alpha = 0.55;
+    [box addSubview:icon];
+    UILabel *t = RZLabel(19, YES, RZText());
+    t.text = @"Chọn một cuộc trò chuyện";
+    t.textAlignment = RZAlignCenter;
+    t.backgroundColor = [UIColor clearColor];
+    t.frame = CGRectMake(0, 92, 300, 26);
+    [box addSubview:t];
+    UILabel *s = RZLabel(14, NO, RZTextGray());
+    s.text = @"Chạm một chat ở bên trái, hoặc nút soạn tin để nhắn cho người mới.";
+    s.numberOfLines = 2;
+    s.lineBreakMode = RZBreakWord;
+    s.textAlignment = RZAlignCenter;
+    s.backgroundColor = [UIColor clearColor];
+    s.frame = CGRectMake(0, 120, 300, 40);
+    [box addSubview:s];
+    [self.view addSubview:box];
+}
+
+@end
+
+@interface RZAppDelegate () <UISplitViewControllerDelegate>
 @property (nonatomic, assign) int shown;  // 0 chưa hiện gì, 1 đăng nhập, 2 các thẻ
 @property (nonatomic, strong) UITabBarController *tabs;
+@property (nonatomic, strong) UISplitViewController *split;  // iPad
+@property (nonatomic, strong) UINavigationController *detail;  // iPad: bên phải
 @property (nonatomic, assign) UIBackgroundTaskIdentifier bgTask;
 @end
+
+static RZAppDelegate *RZApp(void) {
+    id d = [UIApplication sharedApplication].delegate;
+    return [d isKindOfClass:[RZAppDelegate class]] ? d : nil;
+}
+
+UINavigationController *RZDetailNav(void) {
+    return RZApp().detail;
+}
+
+NSString *RZOpenThread(void) {
+    NSArray *vcs = RZApp().detail.viewControllers;
+    UIViewController *root = vcs.count ? [vcs objectAtIndex:0] : nil;
+    return [root isKindOfClass:[RZChatViewController class]] ? ((RZChatViewController *)root).thread : nil;
+}
+
+void RZCloseChat(NSString *thread) {
+    UINavigationController *d = RZApp().detail;
+    if (!d || !thread.length || ![RZOpenThread() isEqualToString:thread]) return;
+    [d setViewControllers:@[[[RZEmptyDetailViewController alloc] init]] animated:NO];
+    [[NSNotificationCenter defaultCenter] postNotificationName:RZOpenThreadChanged object:nil];
+}
 
 @implementation RZAppDelegate
 
@@ -59,6 +127,8 @@
     self.shown = want;
     if (!authorized) {
         self.tabs = nil;
+        self.split = nil;
+        self.detail = nil;
         self.window.rootViewController = [[RZLoginViewController alloc] init];
         [self fixRotation];
         return;
@@ -72,8 +142,23 @@
     }
     self.tabs = [[UITabBarController alloc] init];
     self.tabs.viewControllers = navs;
-    self.window.rootViewController = self.tabs;
+    if (RZPad()) {
+        // iPad: chia đôi như app Tin nhắn — bên trái các thẻ (rộng 320 như iPhone), bên phải cuộc trò chuyện; luôn hiện cả hai
+        // theo cả chiều dọc (delegate không cho ẩn bên trái). iOS 5 / 6: UISplitViewController phải là gốc của cửa sổ.
+        self.detail = [[UINavigationController alloc] initWithRootViewController:[[RZEmptyDetailViewController alloc] init]];
+        self.split = [[UISplitViewController alloc] init];
+        self.split.delegate = self;
+        self.split.viewControllers = @[self.tabs, self.detail];
+        self.window.rootViewController = self.split;
+    } else {
+        self.window.rootViewController = self.tabs;
+    }
     [self fixRotation];
+}
+
+- (BOOL)splitViewController:(UISplitViewController *)svc shouldHideViewController:(UIViewController *)vc
+              inOrientation:(UIInterfaceOrientation)orientation {
+    return NO;
 }
 
 /// iOS 5: thay rootViewController lúc máy đang nằm ngang (iPad) thì view mới đã xoay nhưng giữ khung dọc (rộng 768 thay vì 1024 —
@@ -92,6 +177,9 @@
 - (void)setDarkMode:(BOOL)dark {
     if (dark == RZDark()) return;
     NSUInteger tab = self.tabs ? self.tabs.selectedIndex : 0;
+    // iPad: dựng lại thì mở lại cuộc trò chuyện đang mở bên phải
+    NSString *open = RZOpenThread();
+    NSString *openName = open ? ((RZChatViewController *)[self.detail.viewControllers objectAtIndex:0]).name : nil;
     [RZTheme setDark:dark];
     [RZTheme apply];
     self.window.backgroundColor = RZBg();
@@ -99,6 +187,7 @@
         self.shown = 0;
         [self showAuthorized:YES];
         self.tabs.selectedIndex = tab;
+        if (open.length) RZOpenChat(nil, open, openName, nil);
     }
     RZLog(@"chế độ %@", dark ? @"tối" : @"sáng");
 }
@@ -124,7 +213,7 @@
     if (!thread.length || !self.tabs) return;
     self.tabs.selectedIndex = 0;
     UINavigationController *nav = [self.tabs.viewControllers objectAtIndex:0];
-    [nav popToRootViewControllerAnimated:NO];
+    if (!self.detail) [nav popToRootViewControllerAnimated:NO];  // iPad: chat mở bên phải, bên trái giữ nguyên
     RZOpenChat(nav, thread, RZStr([ln.userInfo objectForKey:@"name"]), nil);
 }
 

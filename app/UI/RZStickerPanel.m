@@ -27,6 +27,7 @@ static void RZStickerImage(NSDictionary *st, CGFloat px, void (^done)(UIImage *)
 @property (nonatomic, strong) UILabel *empty;
 @property (nonatomic, assign) NSUInteger gen;          // bỏ kết quả cũ khi đổi thẻ
 @property (nonatomic, copy) NSString *query;
+@property (nonatomic, assign) CGFloat laidW;           // bề rộng lúc xếp lưới (iPad xoay → xếp lại)
 @end
 
 @implementation RZStickerPanel
@@ -224,6 +225,13 @@ static void RZStickerImage(NSDictionary *st, CGFloat px, void (^done)(UIImage *)
     self.grid.contentSize = CGSizeMake(self.grid.bounds.size.width, h + 44);
 }
 
+- (void)layoutSubviews {
+    [super layoutSubviews];
+    // iPad xoay / đổi bề rộng màn chat: xếp lại lưới sticker theo bề rộng mới
+    if (self.items && fabs(self.grid.bounds.size.width - self.laidW) > 1)
+        [self setItems:self.items note:self.empty.hidden ? nil : self.empty.text];
+}
+
 - (void)setItems:(NSArray *)items note:(NSString *)note {
     self.items = items;
     for (UIView *v in self.grid.subviews)
@@ -231,6 +239,7 @@ static void RZStickerImage(NSDictionary *st, CGFloat px, void (^done)(UIImage *)
     self.empty.hidden = note == nil;
     self.empty.text = note;
     CGFloat W = self.grid.bounds.size.width;
+    self.laidW = W;
     NSInteger cols = MAX(4, (NSInteger)(W / 80));
     CGFloat cw = W / cols, ch = 76;
     CGFloat px = 64 * [UIScreen mainScreen].scale;

@@ -1,4 +1,5 @@
 #import "RZChatViewController.h"
+#import "RZAppDelegate.h"
 #import "RZCore.h"
 #import "RZImages.h"
 #import "RZKit.h"
@@ -444,7 +445,8 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
 
 @interface RZChatViewController () <UITableViewDataSource, UITableViewDelegate, UITextViewDelegate>
 @property (nonatomic, copy) NSString *thread;
-@property (nonatomic, copy) NSString *name, *avatarURL;
+@property (nonatomic, copy) NSString *name;
+@property (nonatomic, copy) NSString *avatarURL;
 @property (nonatomic, strong) NSMutableArray *msgs;  // cũ → mới
 @property (nonatomic, strong) NSArray *rows;         // @{t: day|msg, m, f}
 @property (nonatomic, strong) UITableView *table;
@@ -464,6 +466,7 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
 @property (nonatomic, strong) NSDictionary *replyTo;
 @property (nonatomic, assign) BOOL loading, more, group;
 @property (nonatomic, assign) CGFloat keyboardH;
+@property (nonatomic, assign) CGSize laidSize;  // cỡ màn lúc xếp lần trước (iPad xoay / màn chia đôi → xếp lại)
 @property (nonatomic, assign) long long lastTypingSent;
 @end
 
@@ -490,11 +493,13 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     [super viewDidLoad];
     self.view.backgroundColor = RZChatBg();
     CGRect b = self.view.bounds;
-    // Tiêu đề hai dòng
-    UIView *tv = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 200, 44)];
+    // Tiêu đề hai dòng. Khung giữ bề rộng, chỉ căn giữa: co giãn theo thanh trên thì lúc iPad xoay dọc (thanh hẹp lại) khung co
+    // về 0 và mất tiêu đề (thử iPad mini 1, 17/11/2026)
+    CGFloat tw = RZPad() ? 320 : 200;
+    UIView *tv = [[UIView alloc] initWithFrame:CGRectMake(0, 0, tw, 44)];
     self.titleLabel = RZLabel(17, YES, [UIColor whiteColor]);
     self.titleLabel.textAlignment = RZAlignCenter;
-    self.titleLabel.frame = CGRectMake(0, 3, 200, 22);
+    self.titleLabel.frame = CGRectMake(0, 3, tw, 22);
     self.titleLabel.shadowColor = [UIColor colorWithWhite:0 alpha:0.25];
     self.titleLabel.shadowOffset = CGSizeMake(0, -1);
     self.titleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
@@ -502,10 +507,10 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     [tv addSubview:self.titleLabel];
     self.subtitleLabel = RZLabel(12, NO, [UIColor colorWithWhite:1 alpha:0.85]);
     self.subtitleLabel.textAlignment = RZAlignCenter;
-    self.subtitleLabel.frame = CGRectMake(0, 24, 200, 16);
+    self.subtitleLabel.frame = CGRectMake(0, 24, tw, 16);
     self.subtitleLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth;
     [tv addSubview:self.subtitleLabel];
-    tv.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    tv.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
     self.navigationItem.titleView = tv;
 
     self.table = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, b.size.width, b.size.height - 50) style:UITableViewStylePlain];
@@ -640,6 +645,21 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     CGFloat line = self.field.font.lineHeight;
     h = MIN(MAX(h - 8, line), line * 5);
     return ceilf(h) + 26;
+}
+
+- (void)viewWillLayoutSubviews {
+    [super viewWillLayoutSubviews];
+    // iPad: xoay máy đổi bề rộng màn chat (bên phải màn chia đôi 703 ↔ 447) → xếp lại ô nhập và tính lại cỡ bong bóng
+    CGSize sz = self.view.bounds.size;
+    if (!self.table || CGSizeEqualToSize(sz, self.laidSize)) return;
+    BOOL widthChanged = self.laidSize.width > 0 && fabs(sz.width - self.laidSize.width) > 0.5;
+    self.laidSize = sz;
+    BOOL bottom = [self nearBottom];
+    [self layoutInput:NO];
+    if (widthChanged) {
+        [self.table reloadData];
+        if (bottom) [self scrollToBottom:NO];
+    }
 }
 
 - (void)layoutInput:(BOOL)animated {

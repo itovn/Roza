@@ -1,4 +1,5 @@
 #import "RZKit.h"
+#import "RZAppDelegate.h"
 #import "RZChatViewController.h"
 #import "RZTheme.h"
 
@@ -112,7 +113,20 @@ NSString *RZFold(NSString *s) {
 }
 
 void RZOpenChat(UINavigationController *nav, NSString *thread, NSString *name, NSString *avatar) {
-    if (!thread.length || !nav) return;
+    if (!thread.length) return;
+    UINavigationController *detail = RZDetailNav();
+    if (detail) {
+        // iPad: thay cuộc trò chuyện bên phải (đang mở đúng chat thì chỉ quay về màn chat)
+        if ([RZOpenThread() isEqualToString:thread]) {
+            [detail popToRootViewControllerAnimated:YES];
+            return;
+        }
+        RZChatViewController *c = [[RZChatViewController alloc] initWithThread:thread name:name avatar:avatar];
+        [detail setViewControllers:@[c] animated:NO];
+        [[NSNotificationCenter defaultCenter] postNotificationName:RZOpenThreadChanged object:nil];
+        return;
+    }
+    if (!nav) return;
     RZChatViewController *c = [[RZChatViewController alloc] initWithThread:thread name:name avatar:avatar];
     [nav pushViewController:c animated:YES];
 }
