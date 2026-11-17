@@ -1,0 +1,16 @@
+Origin: Roza
+Label: Roza
+Suite: stable
+Version: 1.0
+Codename: ios6
+Architectures: iphoneos-arm
+Components: main
+Description: Roza — Zalo cho iPhone / iPad iOS 5 / iOS 6 đã jailbreak — https://itovn.github.io/Roza/
+MD5Sum:
+ 171afaefd471362f711e067d2a075670 689 Packages
+ ebdc08b842e0f2dd9b303815074f7059 504 Packages.gz
+ a5b2fad28354687c3b39d032172af491 567 Packages.bz2
+SHA256:
+ a67c47ef416cda90e38b7ff68b7b94231d68565c1a072020d02409f7a5447402 689 Packages
+ 52164eac72226a7f8cfb28a64e1dbd5d0f4162879a925cf74a641d2dc9f1be74 504 Packages.gz
+ 267746f0a96b5830e6d0cecca5c60f5183e54738915c84738e8ae7554226373a 567 Packages.bz2

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Roza — Zalo cho iOS 5 / iOS 6</title>
+<meta name="description" content="Roza: ứng dụng nhắn tin Zalo không chính thức cho iPhone / iPad chạy iOS 5 và iOS 6 đã jailbreak. Giao diện iOS 6, sticker, gửi ảnh / video / tệp / tin thoại, thông báo, chế độ tối, sao lưu lên Telegram.">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="favicon.png">
+<!-- Viết cho Safari iOS 5 / 6: không biến CSS, flex, grid, gap, calc; dải màu có tiền tố -webkit- -->
+<style>
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; padding: 0;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  color: #1c2a38;
+  background: #cbd2d8 url(img/stripes.png) repeat;
+}
+a { color: #2a6fb7; text-decoration: none; }
+/* Thanh trên bóng kiểu iOS 6 */
+.nav {
+  height: 44px; line-height: 44px; text-align: center;
+  background: #dfe6ee;
+  background-image: -webkit-linear-gradient(top, #ffffff 0%, #eef2f7 50%, #e2e9f1 50%, #d4dee9 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #eef2f7 50%, #e2e9f1 50%, #d4dee9 100%);
+  border-bottom: 1px solid #93a3b5;
+  -webkit-box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(40, 60, 90, 0.18);
+  box-shadow: inset 0 1px 0 #fff, 0 1px 2px rgba(40, 60, 90, 0.18);
+  font-size: 20px; font-weight: bold; color: #3a4a5e; text-shadow: 0 1px 0 #fff;
+}
+.wrap { max-width: 620px; margin: 0 auto; padding: 0 10px 30px; }
+/* Phần đầu: biểu tượng + tên */
+.hero { text-align: center; padding: 26px 0 8px; }
+.hero img { width: 120px; height: 120px; }
+.hero h1 { margin: 10px 0 2px; font-size: 32px; color: #2f3e50; text-shadow: 0 1px 0 #fff; }
+.hero p { margin: 4px 16px; font-size: 16px; color: #4c566c; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); line-height: 22px; }
+.hero .ver { display: inline-block; margin-top: 8px; padding: 2px 10px; border-radius: 11px; font-size: 13px; font-weight: bold; color: #fff;
+  background: #d9466f; background-image: -webkit-linear-gradient(top, #f794b2, #d9466f 55%, #c23560);
+  background-image: linear-gradient(to bottom, #f794b2, #d9466f 55%, #c23560);
+  border: 2px solid #fff; -webkit-box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2); box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.2); }
+/* Nút bóng kiểu iOS 6 */
+.btn { display: block; margin: 10px 6px 0; height: 44px; line-height: 44px; border-radius: 9px; text-align: center;
+  font-size: 17px; font-weight: bold; color: #fff; text-shadow: 0 -1px 0 rgba(0, 0, 0, 0.35);
+  border: 1px solid #1b5aa0;
+  background: #2a78c8;
+  background-image: -webkit-linear-gradient(top, #7cbcf4 0%, #3c8ddc 50%, #2a78c8 50%, #2068b8 100%);
+  background-image: linear-gradient(to bottom, #7cbcf4 0%, #3c8ddc 50%, #2a78c8 50%, #2068b8 100%);
+  -webkit-box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), 0 1px 0 rgba(255, 255, 255, 0.6); }
+.btn.rose { border-color: #a8325a;
+  background: #d9466f;
+  background-image: -webkit-linear-gradient(top, #fba4be 0%, #e8668c 50%, #d9466f 50%, #c33a63 100%);
+  background-image: linear-gradient(to bottom, #fba4be 0%, #e8668c 50%, #d9466f 50%, #c33a63 100%); }
+.btn.gray { color: #2f5f93; text-shadow: 0 1px 0 #fff; border-color: #93a3b5;
+  background: #e8edf3;
+  background-image: -webkit-linear-gradient(top, #ffffff 0%, #eef2f7 50%, #e2e9f1 50%, #d6dfe9 100%);
+  background-image: linear-gradient(to bottom, #ffffff 0%, #eef2f7 50%, #e2e9f1 50%, #d6dfe9 100%); }
+/* Bảng nhóm kiểu iOS 6 */
+h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+.group { margin: 0 2px; background: #fff; border: 1px solid #a9b2bc; border-radius: 9px;
+  -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); overflow: hidden; }
+.row { position: relative; padding: 11px 12px 11px 50px; border-top: 1px solid #d9dde2; font-size: 15px; line-height: 20px; }
+.row:first-child { border-top: 0; }
+.row b { display: block; font-size: 16px; color: #1c2a38; }
+.row span { color: #5f6f80; }
+.row .ic svg { display: block; }
+.row .ic { position: absolute; left: 10px; top: 11px; width: 29px; height: 29px; border-radius: 7px; overflow: hidden;
+  -webkit-box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15); }
+.row.plain { padding-left: 12px; }
+.row ol, .row ul { margin: 5px 0 0; padding: 0 0 0 22px; color: #5f6f80; }
+.row li { margin: 4px 0; }
+.row li b { display: inline; font-size: 15px; }
+.row code, .mono { font-family: Menlo, Courier, monospace; font-size: 14px; color: #1c2a38; background: #eef2f6; padding: 1px 4px; border-radius: 3px; word-wrap: break-word; }
+.row.link { padding-top: 0; padding-bottom: 0; }
+.row.link a { display: block; padding: 11px 24px 11px 0; color: #1c2a38; font-weight: bold;
+  background: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='9' height='14'%3E%3Cpath d='M1.5 1.5L7 7l-5.5 5.5' fill='none' stroke='%238e9aa6' stroke-width='2.4'/%3E%3C/svg%3E") no-repeat right center; }
+.c1 { background: #6e5bd0; background-image: -webkit-linear-gradient(top, #a596ec, #6e5bd0); background-image: linear-gradient(to bottom, #a596ec, #6e5bd0); }
+.c2 { background: #2c7fd6; background-image: -webkit-linear-gradient(top, #6fb8f5, #2c7fd6); background-image: linear-gradient(to bottom, #6fb8f5, #2c7fd6); }
+.c3 { background: #f08a1c; background-image: -webkit-linear-gradient(top, #ffc25a, #f08a1c); background-image: linear-gradient(to bottom, #ffc25a, #f08a1c); }
+.c4 { background: #1d8ea3; background-image: -webkit-linear-gradient(top, #54c6d8, #1d8ea3); background-image: linear-gradient(to bottom, #54c6d8, #1d8ea3); }
+.c5 { background: #e0352b; background-image: -webkit-linear-gradient(top, #ff7b72, #e0352b); background-image: linear-gradient(to bottom, #ff7b72, #e0352b); }
+.c6 { background: #4f4cc9; background-image: -webkit-linear-gradient(top, #8b89f0, #4f4cc9); background-image: linear-gradient(to bottom, #8b89f0, #4f4cc9); }
+.c7 { background: #2fa43f; background-image: -webkit-linear-gradient(top, #6fd27a, #2fa43f); background-image: linear-gradient(to bottom, #6fd27a, #2fa43f); }
+.c8 { background: #2c3e52; background-image: -webkit-linear-gradient(top, #5d7590, #2c3e52); background-image: linear-gradient(to bottom, #5d7590, #2c3e52); }
+.c9 { background: #d9466f; background-image: -webkit-linear-gradient(top, #fb9db9, #d9466f); background-image: linear-gradient(to bottom, #fb9db9, #d9466f); }
+/* Ảnh màn hình: khối nội dòng (không flex) */
+.shots { text-align: center; font-size: 0; margin: 0 -4px; }
+.shot { display: inline-block; width: 30%; max-width: 160px; margin: 6px 1.5%; vertical-align: top; font-size: 12px; color: #4c566c;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+.shot img { display: block; width: 100%; border-radius: 10px; border: 1px solid #8e9aa6;
+  -webkit-box-shadow: 0 2px 6px rgba(30, 50, 80, 0.3); box-shadow: 0 2px 6px rgba(30, 50, 80, 0.3); margin-bottom: 4px; }
+.note { margin: 7px 14px 0; font-size: 13px; color: #4c566c; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); line-height: 18px; }
+.warn { margin: 0 2px; padding: 10px 12px; font-size: 14px; line-height: 19px; color: #6b4a12; background: #fff7dc; border: 1px solid #e3c77a; border-radius: 9px; }
+.foot { margin: 30px 10px 0; text-align: center; font-size: 13px; color: #4c566c; line-height: 19px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+</style>
+</head>
+<body>
+<div class="nav">Roza</div>
+<div class="wrap">
+
+  <div class="hero">
+    <img src="img/icon.png" alt="Biểu tượng Roza">
+    <h1>Roza</h1>
+    <p>Nhắn tin <b>Zalo</b> trên iPhone / iPad chạy <b>iOS 5</b> và <b>iOS 6</b> đã jailbreak — giao diện iOS 6, nhẹ, lõi Rust.</p>
+    <span class="ver">Bản 1.0.0</span>
+  </div>
+
+  <a class="btn rose" href="cydia://url/https://cydia.saurik.com/api/share#?source=https://itovn.github.io/Roza/cydia/">Thêm nguồn vào Cydia</a>
+  <a class="btn gray" href="https://github.com/itovn/Roza/releases/latest">Tải tệp .deb</a>
+  <a class="btn gray" href="https://github.com/itovn/Roza">Mã nguồn trên GitHub</a>
+  <p class="note">Nguồn Cydia: <span class="mono">https://itovn.github.io/Roza/cydia/</span></p>
+
+  <h2>Giao diện</h2>
+  <div class="shots">
+    <div class="shot"><img src="img/shot-login.jpg" alt="Đăng nhập bằng mã QR">Đăng nhập bằng mã QR</div>
+    <div class="shot"><img src="img/shot-chat.jpg" alt="Màn chat, chế độ tối">Màn chat (chế độ tối)</div>
+    <div class="shot"><img src="img/shot-more.jpg" alt="Thẻ Thêm">Thẻ Thêm</div>
+  </div>
+  <p class="note">Ảnh chụp trên iPhone 5 (iOS 6). Mã QR đã làm mờ, hàng thông tin tài khoản đã bỏ ra.</p>
+
+  <h2>Tính năng</h2>
+  <div class="group">
+    <div class="row"><div class="ic c2"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M7 7h15a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-8l-5 4v-4H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3z" fill="#fff"/></svg></div><b>Chat riêng và nhóm</b><span>Tin chữ, trả lời (trích dẫn), thu hồi, xoá ở phía mình, thả cảm xúc, «Đã xem», «đang soạn tin…»; ghim chat, tắt thông báo, số chưa đọc; tìm chat ngay trên thanh trên.</span></div>
+    <div class="row"><div class="ic c3"><svg width="29" height="29" viewBox="0 0 29 29"><circle cx="14.5" cy="14.5" r="8.5" fill="#fff"/><ellipse cx="11.4" cy="12" rx="1.2" ry="1.5" fill="#d9741a"/><ellipse cx="17.6" cy="12" rx="1.2" ry="1.5" fill="#d9741a"/><path d="M10.5 16.5c1.2 1.6 2.5 2.4 4 2.4s2.8-.8 4-2.4" fill="none" stroke="#d9741a" stroke-width="1.6" stroke-linecap="round"/></svg></div><b>Sticker</b><span>Sticker của Zalo, cả sticker động chạy ngay trong chat; sticker gần đây, tìm sticker theo từ khoá.</span></div>
+    <div class="row"><div class="ic c7"><svg width="29" height="29" viewBox="0 0 29 29"><rect x="5" y="7.5" width="19" height="14" rx="2.2" fill="#fff"/><path d="M7.5 19.5l4.5-5.5 3.5 3.5 2.5-2.5 3.5 4.5z" fill="#2fa43f"/><circle cx="19" cy="11.5" r="1.8" fill="#2fa43f"/></svg></div><b>Ảnh, video, tệp, tin nhắn thoại</b><span>Gửi ảnh / video từ thư viện hoặc máy ảnh (video tự nén), gửi tệp, ghi âm tin thoại; xem ảnh, phát video và tin thoại. Lưu ảnh / video vào Ảnh, tệp vào Tài liệu, hoặc «Mở bằng app khác…».</span></div>
+    <div class="row"><div class="ic c5"><svg width="29" height="29" viewBox="0 0 29 29"><ellipse cx="14.5" cy="12" rx="5.5" ry="6" fill="#fff"/><path d="M9 12h11l1.5 7h-14z" fill="#fff"/><rect x="6.5" y="18.5" width="16" height="2" fill="#fff"/><ellipse cx="14.5" cy="22.2" rx="2" ry="1.8" fill="#fff"/></svg></div><b>Thông báo tin mới</b><span>Khi app ở nền; số chưa đọc trên biểu tượng; bỏ qua chat đã tắt thông báo (trừ khi có người nhắc @ tới bạn).</span></div>
+    <div class="row"><div class="ic c1"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M21 11.5a7 7 0 1 0 .6 5" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M22.5 6.5v6h-6z" fill="#fff"/></svg></div><b>Đồng bộ với điện thoại, PC</b><span>Tin gửi / nhận trên Zalo ở điện thoại hoặc PC hiện ngay trên Roza; đọc ở máy khác thì Roza cũng bỏ số chưa đọc; lấy lại tin bị lỡ khi mất mạng; tải lịch sử nhóm.</span></div>
+    <div class="row"><div class="ic c4"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M8.5 21.5a4.5 4.5 0 0 1-.4-9A6.5 6.5 0 0 1 20.6 11a4.6 4.6 0 0 1 .4 10.5z" fill="#fff"/><path d="M14.5 19.5v-6.5m-3 3l3-3 3 3" fill="none" stroke="#1d8ea3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><b>Sao lưu lên Telegram</b><span>Sao lưu tin nhắn (cả ảnh, video, tệp nếu muốn) vào chat với bot Telegram của riêng bạn; khôi phục trên máy mới. Không gửi phiên đăng nhập Zalo đi đâu.</span></div>
+    <div class="row"><div class="ic c6"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M10 14v-2a4.5 4.5 0 0 1 9 0v2" fill="none" stroke="#fff" stroke-width="2.2"/><rect x="7.5" y="13.5" width="14" height="10" rx="2" fill="#fff"/></svg></div><b>Trò chuyện ẩn</b><span>Ẩn chat bằng mã PIN 4 số, dùng chung với app Zalo trên điện thoại; thông báo của chat ẩn không lộ tên và nội dung.</span></div>
+    <div class="row"><div class="ic c8"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M18 7a8 8 0 1 0 4.5 13A6.5 6.5 0 0 1 18 7z" fill="#fff"/></svg></div><b>Chế độ tối</b><span>Giao diện iOS 6 sáng hoặc tối, đổi ngay trong thẻ Thêm.</span></div>
+    <div class="row"><div class="ic c9"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M14.5 5.5L22 8.5c0 7.5-3 12.5-7.5 15C10 21 7 16 7 8.5z" fill="#fff"/></svg></div><b>Không qua máy chủ trung gian</b><span>Lõi Rust nói chuyện thẳng với máy chủ Zalo như Zalo Web; phiên đăng nhập và tin nhắn chỉ nằm trên máy của bạn. Mã nguồn mở.</span></div>
+  </div>
+
+  <h2>Mục lục hướng dẫn</h2>
+  <div class="group">
+    <div class="row plain link"><a href="#cai-dat">Cài đặt</a></div>
+    <div class="row plain link"><a href="#dang-nhap">Đăng nhập bằng mã QR</a></div>
+    <div class="row plain link"><a href="#mot-phien">Chỉ một Zalo Web cùng lúc</a></div>
+    <div class="row plain link"><a href="#thong-bao">Thông báo tin mới</a></div>
+    <div class="row plain link"><a href="#gui-tep">Gửi và lưu ảnh, video, tệp</a></div>
+    <div class="row plain link"><a href="#dong-bo">Đồng bộ tin nhắn</a></div>
+    <div class="row plain link"><a href="#sao-luu">Sao lưu và khôi phục qua Telegram</a></div>
+    <div class="row plain link"><a href="#an">Trò chuyện ẩn</a></div>
+    <div class="row plain link"><a href="#hoi-dap">Hỏi đáp</a></div>
+  </div>
+
+  <h2 id="cai-dat">Cài đặt</h2>
+  <div class="group">
+    <div class="row plain"><b>1. Thêm nguồn Cydia</b><span>Mở Cydia → <b style="display:inline">Nguồn</b> → Sửa → Thêm, nhập <code>https://itovn.github.io/Roza/cydia/</code> rồi «Thêm nguồn». Hoặc mở trang này bằng Safari trên máy và chạm nút «Thêm nguồn vào Cydia» ở trên.</span></div>
+    <div class="row plain"><b>2. Cài Roza</b><span>Trong nguồn vừa thêm, chọn «Roza» → Cài đặt → Xác nhận. Cài xong bấm <b style="display:inline">Restart SpringBoard</b> — cần một lần để Roza có mục trong Cài đặt → Thông báo.</span></div>
+    <div class="row plain"><b>3. Mở Roza và đăng nhập</b><span>Quét mã QR bằng app Zalo trên điện thoại khác (xem mục dưới). Lần đầu iOS hỏi quyền gửi thông báo: chọn «OK».</span></div>
+    <div class="row plain"><b>Cài bằng tệp .deb</b><span>Tải tệp ở <a href="https://github.com/itovn/Roza/releases/latest">trang Releases</a>, chép vào máy rồi cài bằng iFile, hoặc qua SSH: <code>dpkg -i vn.roza.app_1.0.0_iphoneos-arm.deb</code> rồi <code>killall SpringBoard</code>. Cần có gói MobileSubstrate.</span></div>
+    <div class="row plain"><b>Cập nhật</b><span>Bản mới phát hành qua nguồn Cydia: Cydia → Thay đổi → Làm mới → Nâng cấp.</span></div>
+  </div>
+
+  <h2 id="dang-nhap">Đăng nhập bằng mã QR</h2>
+  <div class="group">
+    <div class="row plain"><span>Roza đăng nhập giống Zalo Web, nên cần một điện thoại khác đã đăng nhập tài khoản Zalo của bạn (app Zalo bản mới trên Android / iPhone).</span>
+      <ol>
+        <li>Mở Roza: màn hình hiện mã QR.</li>
+        <li>Trên điện thoại kia, mở app Zalo → chạm nút <b>quét mã QR</b> (góc trên, cạnh ô tìm kiếm).</li>
+        <li>Quét mã trên Roza → điện thoại hỏi xác nhận → chạm <b>Đăng nhập</b>.</li>
+        <li>Roza tải danh sách chat, danh bạ, nhóm — vài giây là dùng được.</li>
+      </ol>
+    </div>
+    <div class="row plain"><span>Mã QR chỉ dùng được khoảng 100 giây; hết hạn thì chạm «Lấy mã mới». Phiên đăng nhập lưu trên máy (quyền chỉ app đọc được), mở lại app không phải quét lại. Với Zalo, Roza là một phiên Zalo Web: đăng xuất Zalo Web từ điện thoại thì Roza báo «Cần đăng nhập lại».</span></div>
+  </div>
+
+  <h2 id="mot-phien">Chỉ một Zalo Web cùng lúc</h2>
+  <div class="group">
+    <div class="row plain"><span>Zalo chỉ giữ <b style="display:inline">một kết nối Zalo Web</b> cho mỗi phiên. Nếu bạn mở chat.zalo.me trên trình duyệt (hoặc dùng Roza trên máy thứ hai), Roza sẽ báo «Zalo Web đang mở ở nơi khác» và ngừng nhận tin. Chạm <b style="display:inline">«Dùng ở đây»</b> để lấy lại kết nối cho Roza.</span></div>
+    <div class="row plain"><span>Mỗi máy nên tự đăng nhập bằng mã QR riêng; đừng chép tệp phiên giữa các máy — hai máy dùng chung một phiên sẽ liên tục đá kết nối của nhau.</span></div>
+  </div>
+
+  <h2 id="thong-bao">Thông báo tin mới</h2>
+  <div class="group">
+    <div class="row plain"><span>Roza giữ kết nối với Zalo khi chạy nền (chế độ VoIP của iOS), iOS đánh thức app khi có tin để báo.</span>
+      <ol>
+        <li>Sau khi cài lần đầu, bấm <b>Restart SpringBoard</b> (tweak RZNotify đi kèm giúp Roza có mục trong Cài đặt → Thông báo).</li>
+        <li>Lần đầu mở Roza, chọn <b>OK</b> khi iOS hỏi quyền gửi thông báo.</li>
+        <li>Chỉnh trong Roza → <b>Thêm → Thông báo</b>: hiện thông báo, xem trước nội dung, âm thanh, số trên biểu tượng app.</li>
+        <li>Kiểu hiển thị (biểu ngữ / cảnh báo, màn hình khoá): Cài đặt của iOS → Thông báo → Roza.</li>
+      </ol>
+    </div>
+    <div class="row plain"><span>Không thấy thông báo? Kiểm tra Cài đặt → Thông báo → Roza đang bật; đừng tắt hẳn Roza khỏi thanh đa nhiệm; Wi-Fi / 3G phải có mạng. Chat đã tắt thông báo thì không báo, trừ khi có người nhắc @ tới bạn. Tắt «Xem trước nội dung» thì thông báo chỉ ghi «Tin nhắn mới».</span></div>
+  </div>
+
+  <h2 id="gui-tep">Gửi và lưu ảnh, video, tệp</h2>
+  <div class="group">
+    <div class="row plain"><b>Gửi</b><span>Trong chat, chạm <b style="display:inline">+</b> để chọn ảnh, video (từ thư viện hoặc chụp mới) hoặc tệp; chạm hình mặt cười để chọn sticker; chạm nút micro rồi giữ nút ghi âm để nói, thả tay là gửi tin thoại.</span></div>
+    <div class="row plain"><b>Lưu về máy</b><span>Chạm giữ tin có ảnh / video / tệp → <b style="display:inline">«Lưu về máy»</b>: ảnh và video vào thư viện Ảnh (GIF vẫn động), tệp vào thư mục Tài liệu/Roza. Chọn «Mở bằng app khác…» để mở tệp bằng app khác trên máy.</span></div>
+  </div>
+
+  <h2 id="dong-bo">Đồng bộ tin nhắn</h2>
+  <div class="group">
+    <div class="row plain"><span>Khi Roza đang kết nối, tin bạn gửi / nhận ở Zalo trên điện thoại hoặc PC tự hiện trên Roza. Màn <b style="display:inline">Thêm → Đồng bộ tin nhắn</b> cho xem trạng thái và có hai nút:</span>
+      <ul>
+        <li><b>Lấy lại tin bị lỡ</b> — hỏi máy chủ Zalo các tin gần đây và tin bị lỡ lúc Roza tắt / mất mạng.</li>
+        <li><b>Tải lịch sử tất cả nhóm</b> — tải tối đa 300 tin gần nhất của mỗi nhóm.</li>
+      </ul>
+    </div>
+    <div class="row plain"><span>Giới hạn của Zalo Web: lịch sử chat riêng từ trước khi đăng nhập Roza chỉ nằm trên điện thoại, Zalo chưa cho Zalo Web tải về. Một số nhóm không cho xem tin cũ (nhóm tắt «thành viên mới xem tin cũ», hoặc Zalo hạn chế) — màn Đồng bộ ghi rõ lý do từng nhóm. Muốn giữ tin trên Roza khi đổi máy, dùng sao lưu Telegram.</span></div>
+  </div>
+
+  <h2 id="sao-luu">Sao lưu và khôi phục qua Telegram</h2>
+  <div class="group">
+    <div class="row plain"><span>Bản sao lưu nằm trong chat giữa bạn và một bot Telegram <b style="display:inline">do chính bạn tạo</b>, không qua máy chủ nào khác.</span>
+      <ol>
+        <li>Mở Telegram, nhắn cho <b>@BotFather</b> lệnh <code>/newbot</code>, đặt tên cho bot → BotFather gửi lại <b>token</b> (dạng <code>123456789:AA…</code>).</li>
+        <li>Mở chat với bot vừa tạo, gửi <code>/start</code>.</li>
+        <li>Trong Roza: <b>Thêm → Sao lưu (Telegram)</b> → «Nhập token», dán token → bấm <b>Tìm chat</b>.</li>
+        <li>Bấm <b>Sao lưu ngay</b>. Bản sao lưu (đã nén) được gửi và ghim trong chat với bot.</li>
+        <li>Tuỳ chọn: <b>Tự sao lưu mỗi ngày</b>; <b>Sao lưu cả ảnh, video, tệp</b> (tệp lớn tự chia phần ≤ 19 MB).</li>
+      </ol>
+    </div>
+    <div class="row plain"><b>Khôi phục trên máy mới</b><span>Cài Roza, đăng nhập bằng mã QR, vào Thêm → Sao lưu (Telegram), dán <b style="display:inline">cùng token</b> → Tìm chat → <b style="display:inline">Khôi phục từ bản mới nhất</b>. Tin nhắn trên máy được thay bằng bản sao lưu; ảnh / video / tệp đã sao lưu được lấy lại từ Telegram khi bạn mở chúng.</span></div>
+    <div class="row plain"><span>Bản sao lưu gồm tin nhắn, danh bạ, nhóm — <b style="display:inline">không gồm phiên đăng nhập Zalo</b>. Giữ kín token: ai có token đều đọc được bản sao lưu trong chat với bot.</span></div>
+  </div>
+
+  <h2 id="an">Trò chuyện ẩn</h2>
+  <div class="group">
+    <div class="row plain"><span>Giống app Zalo: danh sách chat ẩn và mã PIN lưu trên tài khoản, nên chat ẩn trên điện thoại cũng ẩn trên Roza và ngược lại.</span>
+      <ul>
+        <li><b>Ẩn</b>: vuốt sang trái trên một chat → «Ẩn». Lần đầu chưa có PIN thì đặt PIN 4 số (nhập hai lần).</li>
+        <li><b>Xem</b>: gõ đúng PIN vào ô tìm kiếm của danh sách chat, hoặc Thêm → Trò chuyện ẩn → nhập PIN.</li>
+        <li><b>Bỏ ẩn</b>: trong danh sách chat ẩn, vuốt sang trái → «Bỏ ẩn».</li>
+      </ul>
+    </div>
+    <div class="row plain"><span>Thông báo của chat ẩn chỉ ghi «Roza: Bạn có tin nhắn mới».</span></div>
+  </div>
+
+  <h2 id="hoi-dap">Hỏi đáp</h2>
+  <div class="group">
+    <div class="row plain"><b>Roza có phải app của Zalo?</b><span>Không. Roza là ứng dụng không chính thức, đăng nhập và nhắn tin qua cùng giao thức với Zalo Web. Tên, biểu tượng, hình ảnh trong app đều tự vẽ. Dùng ứng dụng không chính thức là lựa chọn của bạn.</span></div>
+    <div class="row plain"><b>Tin nhắn có đi qua máy chủ nào khác?</b><span>Không. Roza kết nối thẳng tới máy chủ Zalo; phiên đăng nhập và tin nhắn lưu trong máy (<code>/var/mobile/Library/Roza</code>). Chỉ khi bạn bật sao lưu thì dữ liệu mới được gửi tới bot Telegram của chính bạn.</span></div>
+    <div class="row plain"><b>Gọi thoại / video được không?</b><span>Chưa. Roza 1.0 dành cho nhắn tin.</span></div>
+    <div class="row plain"><b>iPad dùng được không?</b><span>Được (iPad 1 – 4, iPad mini 1), chạy toàn màn hình với bố cục như trên iPhone.</span></div>
+    <div class="row plain"><b>Đăng xuất, gỡ cài đặt</b><span>Thêm → Đăng xuất: xoá phiên và tin nhắn đã lưu trên máy. Gỡ app: Cydia → Đã cài đặt → Roza → Sửa đổi → Gỡ bỏ.</span></div>
+    <div class="row plain"><b>Báo lỗi, góp ý</b><span><a href="https://github.com/itovn/Roza/issues">GitHub Issues</a> hoặc nhóm Telegram <a href="https://t.me/tivikit">t.me/tivikit</a>. Khi báo lỗi, ghi rõ máy, bản iOS và cách làm để gặp lỗi.</span></div>
+  </div>
+
+  <h2>Máy chạy được</h2>
+  <div class="group">
+    <div class="row plain"><span>iOS 5.0 – 6.1.x đã jailbreak (cần MobileSubstrate): iPhone 4, 4S, 5 · iPad 1, 2, 3, 4, mini 1 · iPod touch 4, 5. Đã chạy thử trên iPhone 5 (iOS 6.1.4), iPad mini 1 (iOS 6.1.3), iPad 1 (iOS 5.1.1).</span></div>
+  </div>
+
+  <h2>Mã nguồn</h2>
+  <div class="group">
+    <div class="row plain"><b>Mã nguồn mở — GPL-3.0</b><span><a href="https://github.com/itovn/Roza">github.com/itovn/Roza</a> · lõi Rust (giao thức chuyển từ thư viện <a href="https://github.com/RFS-ADRENO/zca-js">zca-js</a>, MIT), giao diện Objective-C / UIKit dựng bằng Theos.</span></div>
+  </div>
+
+  <div class="foot">
+    Roza là ứng dụng <b>không chính thức</b>, đăng nhập như Zalo Web; không phải sản phẩm của Zalo / VNG.<br>
+    Zalo là nhãn hiệu của chủ sở hữu tương ứng.
+  </div>
+</div>
+</body>
+</html>

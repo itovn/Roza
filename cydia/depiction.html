@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Roza</title>
+<!-- Trang mô tả gói trong Cydia (UIWebView iOS 5 / 6): không biến CSS, flex, grid; dải màu có tiền tố -webkit- -->
+<style>
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; padding: 10px 10px 24px; font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #1c2a38;
+  background: #cbd2d8 url(../img/stripes.png) repeat; }
+a { color: #2a6fb7; text-decoration: none; }
+.head { position: relative; padding: 4px 0 6px 76px; min-height: 64px; }
+.head img { position: absolute; left: 0; top: 0; width: 64px; height: 64px; }
+.head b { display: block; font-size: 20px; color: #2f3e50; text-shadow: 0 1px 0 #fff; margin-top: 6px; }
+.head span { font-size: 14px; color: #4c566c; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+h2 { margin: 18px 10px 6px; font-size: 15px; color: #4c566c; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+.group { background: #fff; border: 1px solid #a9b2bc; border-radius: 9px; overflow: hidden;
+  -webkit-box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.8); }
+.row { padding: 10px 12px; border-top: 1px solid #d9dde2; font-size: 14px; line-height: 19px; }
+.row:first-child { border-top: 0; }
+.row b { color: #1c2a38; }
+.shots { text-align: center; font-size: 0; }
+.shots img { display: inline-block; width: 31%; max-width: 120px; margin: 4px 1%; border-radius: 8px; border: 1px solid #8e9aa6; }
+.foot { margin-top: 16px; text-align: center; font-size: 12px; color: #4c566c; line-height: 17px; text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85); }
+</style>
+</head>
+<body>
+<div class="head">
+  <img src="CydiaIcon.png" alt="">
+  <b>Roza 1.0.0</b>
+  <span>Zalo cho iOS 5 / iOS 6 đã jailbreak</span>
+</div>
+
+<div class="shots">
+  <img src="../img/shot-login.jpg" alt=""><img src="../img/shot-chat.jpg" alt=""><img src="../img/shot-more.jpg" alt="">
+</div>
+
+<h2>Bản 1.0.0</h2>
+<div class="group">
+  <div class="row">Bản đầu tiên: đăng nhập bằng <b>mã QR</b> (như Zalo Web), giao diện iOS 6, chế độ sáng / tối</div>
+  <div class="row">Chat riêng / nhóm: trả lời, thu hồi, thả cảm xúc, «Đã xem»; <b>sticker</b> cả sticker động</div>
+  <div class="row">Gửi <b>ảnh, video, tệp, tin nhắn thoại</b>; lưu ảnh / video / tệp về máy</div>
+  <div class="row"><b>Thông báo tin mới</b> khi app ở nền; đồng bộ với Zalo trên điện thoại / PC</div>
+  <div class="row"><b>Sao lưu lên Telegram</b> (bot riêng của bạn, kèm cả ảnh / video / tệp) và khôi phục trên máy mới</div>
+  <div class="row"><b>Trò chuyện ẩn</b> bằng mã PIN, dùng chung với Zalo trên điện thoại</div>
+</div>
+
+<h2>Lưu ý</h2>
+<div class="group">
+  <div class="row">Cài xong bấm <b>Restart SpringBoard</b> — tweak RZNotify cho Roza có mục «Thông báo» của iOS.</div>
+  <div class="row">Đăng nhập cần một điện thoại khác có app Zalo để quét mã QR. Zalo chỉ cho <b>một Zalo Web</b> cùng lúc: mở chat.zalo.me ở nơi khác thì Roza báo, chạm «Dùng ở đây» để lấy lại.</div>
+  <div class="row">Máy: iOS 5.0 – 6.1.x (iPhone 4 / 4S / 5, iPad 1 – 4, iPad mini 1, iPod touch 4 / 5).</div>
+  <div class="row">Ứng dụng <b>không chính thức</b>, không phải sản phẩm của Zalo / VNG. Mã nguồn mở GPL-3.0: <a href="https://github.com/itovn/Roza">github.com/itovn/Roza</a></div>
+</div>
+
+<div class="foot">
+  Hướng dẫn chi tiết: <a href="https://itovn.github.io/Roza/">itovn.github.io/Roza</a>
+</div>
+</body>
+</html>
