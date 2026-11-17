@@ -30,18 +30,25 @@
     logo.textAlignment = RZAlignCenter;
     logo.shadowColor = [UIColor colorWithWhite:0 alpha:0.2];
     logo.shadowOffset = CGSizeMake(0, 1);
-    // iPad: khối nội dung (cao ~504) đặt giữa màn, giữ giữa khi xoay
+    // iPad: cả khối nội dung (cao 504) nằm trong một khung đặt giữa màn — khung co giãn lề trên / dưới, các phần bên trong cố
+    // định theo khung. (Mỗi phần tự co giãn lề riêng thì lúc xoay dọc → ngang chúng dịch lệch nhau, thẻ QR đè chữ «Roza».)
     BOOL pad = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
-    UIViewAutoresizing mid = pad ? UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin : 0;
-    logo.frame = CGRectMake(0, pad ? floorf((b.size.height - 504) / 2 - 20) : (b.size.height > 500 ? 40 : 18), W, 48);
-    logo.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
-    [self.view addSubview:logo];
+    UIView *host = self.view;
+    if (pad) {
+        host = [[UIView alloc] initWithFrame:CGRectMake(0, floorf((b.size.height - 504) / 2 - 20), W, 504)];
+        host.backgroundColor = [UIColor clearColor];
+        host.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleBottomMargin;
+        [self.view addSubview:host];
+    }
+    logo.frame = CGRectMake(0, pad ? 0 : (b.size.height > 500 ? 40 : 18), W, 48);
+    logo.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [host addSubview:logo];
     UILabel *sub = RZLabel(14, NO, [UIColor colorWithWhite:1 alpha:0.85]);
     sub.text = pad ? @"Nhắn tin Zalo trên iPad đời cũ" : @"Nhắn tin Zalo trên iPhone đời cũ";
     sub.textAlignment = RZAlignCenter;
     sub.frame = CGRectMake(0, CGRectGetMaxY(logo.frame), W, 20);
-    sub.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
-    [self.view addSubview:sub];
+    sub.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [host addSubview:sub];
 
     CGFloat card = pad ? 300 : 236;  // iPad: mã to hơn cho dễ quét
     self.qrCard = [[UIView alloc] initWithFrame:CGRectMake((W - card) / 2, CGRectGetMaxY(sub.frame) + 18, card, card)];
@@ -51,8 +58,8 @@
     self.qrCard.layer.shadowOpacity = 0.25;
     self.qrCard.layer.shadowOffset = CGSizeMake(0, 2);
     self.qrCard.layer.shadowRadius = 6;
-    self.qrCard.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | mid;
-    [self.view addSubview:self.qrCard];
+    self.qrCard.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
+    [host addSubview:self.qrCard];
     self.qr = [[UIImageView alloc] initWithFrame:CGRectInset(self.qrCard.bounds, 10, 10)];
     self.qr.layer.magnificationFilter = kCAFilterNearest;
     [self.qrCard addSubview:self.qr];
@@ -76,17 +83,17 @@
     self.status.numberOfLines = 2;
     self.status.lineBreakMode = RZBreakWord;
     self.status.frame = CGRectMake(16, CGRectGetMaxY(self.qrCard.frame) + 12, W - 32, 42);
-    self.status.autoresizingMask = UIViewAutoresizingFlexibleWidth | mid;
-    [self.view addSubview:self.status];
+    self.status.autoresizingMask = UIViewAutoresizingFlexibleWidth;
+    [host addSubview:self.status];
     self.steps = RZLabel(13, NO, [UIColor colorWithWhite:1 alpha:0.9]);
     self.steps.numberOfLines = 0;
     self.steps.lineBreakMode = RZBreakWord;
     self.steps.text = @"1. Mở app Zalo trên điện thoại khác\n2. Bấm nút quét mã QR (góc trên)\n3. Quét mã này rồi bấm «Đăng nhập»";
     CGFloat sw = pad ? 290 : W - 60;  // iPad: cột hướng dẫn hẹp, đặt giữa
     self.steps.frame = CGRectMake(floorf((W - sw) / 2), CGRectGetMaxY(self.status.frame) + 4, sw, 60);
-    self.steps.autoresizingMask = pad ? UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin | mid
+    self.steps.autoresizingMask = pad ? UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin
                                       : UIViewAutoresizingFlexibleWidth;
-    [self.view addSubview:self.steps];
+    [host addSubview:self.steps];
     UILabel *note = RZLabel(11, NO, [UIColor colorWithWhite:1 alpha:0.7]);
     note.numberOfLines = 3;
     note.lineBreakMode = RZBreakWord;
