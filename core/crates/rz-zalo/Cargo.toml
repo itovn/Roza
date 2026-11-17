@@ -1,0 +1,29 @@
+[package]
+name = "rz-zalo"
+description = "Roza: giao thức Zalo Web (chuyển từ zca-js — MIT, xem LICENSE-zca-js) — mã hoá, đăng nhập QR, API HTTP, WebSocket"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+# HTTPS bằng rustls + ring (ring vá cho armv7 Apple: tools/rust/cargo-ios6.sh) + bộ chứng chỉ gốc Mozilla đóng trong tệp chạy:
+# TLS / chứng chỉ gốc của iOS 5 / 6 không vào được máy chủ Zalo hiện nay
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots", "gzip"] }
+# WebSocket: TLS tự mở (tokio-rustls, ring) rồi bắt tay WebSocket trên luồng đó — khỏi kéo aws-lc-rs
+tokio-tungstenite = { version = "0.26", default-features = false, features = ["handshake"] }
+tokio-rustls = { version = "0.26", default-features = false, features = ["ring", "tls12", "logging"] }
+webpki-roots = "1"
+futures-util = { version = "0.3", default-features = false, features = ["sink", "std"] }
+url = "2"
+aes = "0.8"
+cbc = { version = "0.1", features = ["alloc"] }
+aes-gcm = "0.10"
+md-5 = "0.10"
+base64 = "0.22"
+flate2 = "1"
+rand = "0.8"
+percent-encoding = "2"
+regex-lite = "0.1"

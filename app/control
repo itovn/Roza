@@ -1,0 +1,10 @@
+Package: vn.roza.app
+Name: Roza
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Nhắn tin Zalo trên iPhone / iPad iOS 5 / iOS 6 (ứng dụng không chính thức, đăng nhập như Zalo Web).
+Maintainer: Roza
+Author: Roza
+Section: Social
+Icon: file:///Applications/Roza.app/Icon@2x.png
+Depends: firmware (>= 5.0), mobilesubstrate

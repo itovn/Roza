@@ -1,0 +1,4 @@
+# Mọi tệp chữ dùng LF (control / postinst của gói .deb hỏng nếu là CRLF — 17/11/2026)
+* text=auto eol=lf
+*.png binary
+*.jpg binary

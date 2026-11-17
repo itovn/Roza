@@ -1,0 +1,15 @@
+[package]
+name = "rz-ffi"
+description = "Roza: API C cho app iOS (thư viện tĩnh librz_ffi.a)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+# Chỉ staticlib: thêm rlib thì cargo tắt LTO (thư viện rất to)
+crate-type = ["staticlib"]
+
+[dependencies]
+rz-core = { path = "../rz-core" }
+tokio = { workspace = true }
+serde_json = { workspace = true }

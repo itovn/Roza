@@ -1,0 +1,22 @@
+[package]
+name = "rz-core"
+description = "Roza: lõi (phiên đăng nhập, lưu trữ, đồng bộ, dịch vụ cho app)"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rz-zalo = { path = "../rz-zalo" }
+tokio = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = "0.22"
+# SQLite dựng kèm (mã C dựng bằng clang của Theos cho armv7) — sqlite của iOS 5 / 6 quá cũ
+rusqlite = { version = "0.32", features = ["bundled"] }
+# Ảnh WebP → PNG (iOS 5 / 6 không đọc được WebP) — Rust thuần
+image-webp = "0.2"
+png = "0.18"
+md-5 = "0.10"
+# Sao lưu lên Telegram (Bot API) — cùng reqwest / rustls với rz-zalo
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots", "json"] }
+flate2 = "1"

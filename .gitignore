@@ -1,0 +1,14 @@
+/core/target/
+/keys/
+# Công cụ / ghi chú riêng trên máy anh (địa chỉ máy dựng, máy thử) — không lên git
+/tools-local/
+# Phiên đăng nhập Zalo của rz-cli (cookie + imei) — không lên git
+rz-session*.json
+*.session.json
+qr.png
+# Thư mục dựng của Theos
+/app/.theos/
+/app/packages/
+# Tài liệu tham khảo: IPA Zalo 4.8.2 (có iTunesMetadata.plist = thông tin Apple ID người mua, tệp chạy có bản quyền) và mã
+# zca-js chép về để đọc (lõi chuyển sang Rust ở core/crates/rz-zalo) — không lên git
+/Tham_Khao/

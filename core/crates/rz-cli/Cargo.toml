@@ -1,0 +1,12 @@
+[package]
+name = "rz-cli"
+description = "Roza: chạy thử lõi trên PC (Windows / Linux) và trên máy iOS qua SSH"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+rz-zalo = { path = "../rz-zalo" }
+tokio = { workspace = true }
+serde_json = { workspace = true }
+base64 = "0.22"

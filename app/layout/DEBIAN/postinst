@@ -1,0 +1,9 @@
+#!/bin/sh
+# SpringBoard iOS 5 / 6 giữ biểu tượng đã dựng trong IconsCache (respring cũng không đọc lại Icon*.png): xoá mục của app để
+# biểu tượng mới hiện sau lần khởi động lại SpringBoard kế tiếp (như GramMini). Chỉ là bộ đệm, SpringBoard tự dựng lại.
+rm -f /var/mobile/Library/Caches/com.apple.IconsCache/vn.roza.app_*
+# Cydia: xin nút «Restart SpringBoard» (tweak RZNotify cần SpringBoard nạp lại); cài tay bằng dpkg qua SSH thì không làm gì.
+if [ "$1" = configure ] && [ -n "$CYDIA" ]; then
+    eval "echo 'finish:restart' >&${CYDIA%% *}"
+fi
+exit 0
