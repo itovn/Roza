@@ -54,3 +54,8 @@ Còn mở: bố cục riêng cho iPad (UISplitViewController); lịch sử nhóm
 ## 17/11/2026 (khuya) — Giao diện iPad
 
 - Màn chia đôi trên iPad: danh sách bên trái, chat bên phải, cả dọc và ngang; đăng nhập căn giữa (D20). Phát hành bản 1.1.0.
+
+## 17/11/2026 (khuya, tiếp) — Bảy tính năng mới, tên gợi nhớ, sửa tên người lạ
+
+- Nhắc hẹn, vị trí (bản đồ OSM), tin nhắn nhanh (gõ «/»), mã QR chuyển khoản (VietQR), gửi tài khoản ngân hàng, danh thiếp, lưu vào
+  Telegram; tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo khi đang kết nối (D21). Phát hành bản 1.2.0.

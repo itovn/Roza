@@ -20,3 +20,5 @@ md-5 = "0.10"
 # Sao lưu lên Telegram (Bot API) — cùng reqwest / rustls với rz-zalo
 reqwest = { version = "0.12", default-features = false, features = ["rustls-tls-webpki-roots", "json"] }
 flate2 = "1"
+# Mã QR chuyển khoản (VietQR) — Rust thuần, không kèm crate image
+qrcode = { version = "0.14", default-features = false }

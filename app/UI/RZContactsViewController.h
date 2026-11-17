@@ -4,4 +4,6 @@
 /// để bắt đầu trò chuyện (nút soạn tin ở danh sách chat).
 @interface RZContactsViewController : UITableViewController
 - (instancetype)initPicker;
+/// Chọn một người (vd. gửi danh thiếp): chạm → onPick(@{uid, name, avatar}), không mở chat. Trình bày trong nav (có nút «Huỷ»).
+- (instancetype)initChooserWithTitle:(NSString *)title onPick:(void (^)(NSDictionary *user))onPick;
 @end

@@ -13,6 +13,39 @@
 #import "RZMediaSaver.h"
 #import "RZVoice.h"
 #import "RZTheme.h"
+#import "RZContactsViewController.h"
+#import "RZExtras.h"
+
+#pragma mark - Gợi ý tin nhắn nhanh
+
+/// Bảng gợi ý nổi trên ô nhập khi gõ «/» (tin nhắn nhanh của Zalo).
+@interface RZQuickSuggest : NSObject <UITableViewDataSource, UITableViewDelegate>
+@property (nonatomic, strong) NSArray *items;  // [{keyword, text}]
+@property (nonatomic, copy) void (^onPick)(NSDictionary *item);
+@end
+
+@implementation RZQuickSuggest
+- (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)s {
+    return self.items.count;
+}
+- (UITableViewCell *)tableView:(UITableView *)tv cellForRowAtIndexPath:(NSIndexPath *)ip {
+    UITableViewCell *c = [tv dequeueReusableCellWithIdentifier:@"q"];
+    if (!c) {
+        c = [[UITableViewCell alloc] initWithStyle:UITableViewCellStyleSubtitle reuseIdentifier:@"q"];
+        RZStyleCell(c);
+        c.textLabel.font = [UIFont boldSystemFontOfSize:15];
+        c.detailTextLabel.font = [UIFont systemFontOfSize:13];
+    }
+    NSDictionary *q = [self.items objectAtIndex:ip.row];
+    c.textLabel.text = [@"/" stringByAppendingString:RZStr([q objectForKey:@"keyword"]) ?: @""];
+    c.detailTextLabel.text = [RZStr([q objectForKey:@"text"]) stringByReplacingOccurrencesOfString:@"\n" withString:@" "];
+    return c;
+}
+- (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)ip {
+    [tv deselectRowAtIndexPath:ip animated:NO];
+    if (self.onPick) self.onPick([self.items objectAtIndex:ip.row]);
+}
+@end
 
 #pragma mark - Bố cục một tin
 
@@ -73,6 +106,26 @@ static NSString *RZBodyText(NSDictionary *m) {
         return [NSString stringWithFormat:@"🎤 Tin nhắn thoại %lld:%02lld", d / 60, d % 60];
     }
     if ([kind isEqualToString:@"video"]) return @"🎬 Video";
+    if ([kind isEqualToString:@"contact"]) {
+        NSString *name = RZStr([media objectForKey:@"name"]);
+        return [NSString stringWithFormat:@"👤 Danh thiếp\n%@\nChạm để nhắn tin", name.length ? name : @"Người dùng Zalo"];
+    }
+    if ([kind isEqualToString:@"location"]) {
+        NSString *title = RZStr([media objectForKey:@"title"]);
+        double lat = [[media objectForKey:@"lat"] doubleValue], lng = [[media objectForKey:@"lng"] doubleValue];
+        return [NSString stringWithFormat:@"📍 %@\n%.5f, %.5f\nChạm để xem bản đồ", title.length ? title : @"Vị trí", lat, lng];
+    }
+    if ([kind isEqualToString:@"bank"]) {
+        NSString *num = RZStr([media objectForKey:@"number"]);
+        if (!num.length) return @"🏦 Tài khoản ngân hàng\nChạm để xem";
+        NSString *bank = RZStr([media objectForKey:@"bank"]);
+        NSString *holder = RZStr([media objectForKey:@"holder"]);
+        NSMutableString *s = [NSMutableString stringWithFormat:@"🏦 %@\n%@", bank.length ? bank : @"Tài khoản ngân hàng", num];
+        if (holder.length) [s appendFormat:@"\n%@", holder];
+        [s appendString:@"\nChạm để xem mã QR chuyển khoản"];
+        return s;
+    }
+    if ([kind isEqualToString:@"reminder"]) return [text stringByAppendingString:@"\nChạm để xem nhắc hẹn"];
     if ([kind isEqualToString:@"link"]) {
         NSString *url = RZStr([media objectForKey:@"url"]) ?: @"";
         NSString *title = RZStr([media objectForKey:@"title"]) ?: @"";
@@ -468,6 +521,10 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
 @property (nonatomic, assign) CGFloat keyboardH;
 @property (nonatomic, assign) CGSize laidSize;  // cỡ màn lúc xếp lần trước (iPad xoay / màn chia đôi → xếp lại)
 @property (nonatomic, assign) long long lastTypingSent;
+@property (nonatomic, strong) NSMutableSet *resolving;     // thẻ ngân hàng đang đọc (bank.resolve)
+@property (nonatomic, strong) NSArray *quickItems;         // tin nhắn nhanh (gõ «/»)
+@property (nonatomic, strong) UITableView *quickTable;
+@property (nonatomic, strong) RZQuickSuggest *quickSource;
 @end
 
 @implementation RZChatViewController
@@ -512,6 +569,9 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     [tv addSubview:self.subtitleLabel];
     tv.autoresizingMask = UIViewAutoresizingFlexibleLeftMargin | UIViewAutoresizingFlexibleRightMargin;
     self.navigationItem.titleView = tv;
+    // Chạm tiêu đề → đặt tên gợi nhớ (chat 1-1), nhắc hẹn
+    [tv addGestureRecognizer:[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(titleTapped)]];
+    self.resolving = [NSMutableSet set];
 
     self.table = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, b.size.width, b.size.height - 50) style:UITableViewStylePlain];
     self.table.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -539,6 +599,7 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
 - (void)viewWillAppear:(BOOL)animated {
     [super viewWillAppear:animated];
     [RZCore call:@"messages.open" args:@{@"thread": self.thread} done:^(id ok, NSDictionary *err) {
+        [self applyThreadName:ok];
         if ([[ok objectForKey:@"seen"] boolValue]) {
             NSDictionary *last = [self lastOutgoing];
             if (last) {
@@ -554,6 +615,44 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     [super viewWillDisappear:animated];
     [self.field resignFirstResponder];
     [RZCore call:@"messages.close" args:@{@"thread": self.thread} done:nil];
+}
+
+/// Tên trên thanh trên theo dữ liệu cuộc trò chuyện (tên gợi nhớ, hoặc tên vừa tra được của người chưa kết bạn).
+- (void)applyThreadName:(NSDictionary *)t {
+    if (self.group || ![t isKindOfClass:[NSDictionary class]]) return;
+    NSString *n = RZStr([t objectForKey:@"name"]);
+    if (n.length && ![n isEqualToString:self.name]) {
+        self.name = n;
+        self.titleLabel.text = n;
+    }
+    NSString *a = RZStr([t objectForKey:@"avatar"]);
+    if (a.length) self.avatarURL = a;
+}
+
+- (void)titleTapped {
+    RZSheet *s = [[RZSheet alloc] initWithTitle:self.name];
+    __weak RZChatViewController *ws = self;
+    NSString *uid = [self.thread substringFromIndex:1];
+    if (!self.group) {
+        [s add:@"Đặt tên gợi nhớ…" action:^{
+            RZEditAlias(uid, ws.name, ^(NSString *name) {
+                if (name.length) {
+                    ws.name = name;
+                    ws.titleLabel.text = name;
+                }
+            });
+        }];
+    }
+    [s add:@"Nhắc hẹn" action:^{
+        [ws openReminders];
+    }];
+    [s showIn:self.view];
+}
+
+- (void)openReminders {
+    [self.field resignFirstResponder];
+    RZReminderListViewController *r = [[RZReminderListViewController alloc] initWithThread:self.thread name:self.name];
+    [self.navigationController pushViewController:r animated:YES];
 }
 
 - (void)loadSubtitle {
@@ -671,6 +770,7 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
         self.inputBar.frame = CGRectMake(0, b.size.height - self.keyboardH - ih, b.size.width, ih);
         if (self.replyBar) self.replyBar.frame = CGRectMake(0, self.inputBar.frame.origin.y - replyH, b.size.width, replyH);
         self.table.frame = CGRectMake(0, 0, b.size.width, b.size.height - self.keyboardH - ih - replyH);
+        [self layoutQuick];
     };
     if (animated) [UIView animateWithDuration:0.2 animations:apply];
     else apply();
@@ -684,6 +784,7 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
     BOOL bottom = [self nearBottom];
     [self layoutInput:NO];
     if (bottom) [self scrollToBottom:NO];
+    [self updateQuickSuggest];
     long long now = RZNowMs();
     if (t.length && now - self.lastTypingSent > 4000) {
         self.lastTypingSent = now;
@@ -822,7 +923,123 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
         UINavigationController *nav = [[UINavigationController alloc] initWithRootViewController:fb];
         [ws presentViewController:nav animated:YES completion:nil];
     }];
+    [s add:@"Vị trí" action:^{
+        [ws.field resignFirstResponder];
+        RZMapViewController *m = [[RZMapViewController alloc] initPickerWithDone:^(double lat, double lng, NSString *address) {
+            [RZCore call:@"messages.send" args:@{@"thread": ws.thread ?: @"", @"text": RZLocationText(lat, lng, address)} done:^(id ok, NSDictionary *err) {
+                if (err) RZAlert(@"Không gửi được", RZErrorText(err));
+            }];
+        }];
+        [ws.navigationController pushViewController:m animated:YES];
+    }];
+    [s add:@"Danh thiếp" action:^{
+        RZContactsViewController *c = [[RZContactsViewController alloc] initChooserWithTitle:@"Gửi danh thiếp" onPick:^(NSDictionary *u) {
+            [RZCore call:@"card.send" args:@{@"thread": ws.thread ?: @"", @"uid": RZStr([u objectForKey:@"uid"]) ?: @""} done:^(id ok, NSDictionary *err) {
+                if (err) RZAlert(@"Không gửi được danh thiếp", RZErrorText(err));
+            }];
+        }];
+        [ws presentViewController:[[UINavigationController alloc] initWithRootViewController:c] animated:YES completion:nil];
+    }];
+    [s add:@"Tài khoản ngân hàng" action:^{
+        RZBankFormViewController *f = [[RZBankFormViewController alloc] initWithThread:ws.thread qr:NO];
+        [ws presentViewController:[[UINavigationController alloc] initWithRootViewController:f] animated:YES completion:nil];
+    }];
+    [s add:@"Mã QR chuyển khoản" action:^{
+        RZBankFormViewController *f = [[RZBankFormViewController alloc] initWithThread:ws.thread qr:YES];
+        [ws presentViewController:[[UINavigationController alloc] initWithRootViewController:f] animated:YES completion:nil];
+    }];
+    [s add:@"Nhắc hẹn" action:^{
+        [ws openReminders];
+    }];
+    [s add:@"Tin nhắn nhanh" action:^{
+        [ws pickQuickMessage];
+    }];
     [s showIn:self.view];
+}
+
+/// Chọn một tin nhắn nhanh để chèn vào ô nhập; chưa có thì mở màn quản lý.
+- (void)pickQuickMessage {
+    [RZCore call:@"quick.list" args:nil done:^(id ok, NSDictionary *err) {
+        NSArray *items = [ok isKindOfClass:[NSArray class]] ? ok : @[];
+        self.quickItems = items;
+        if (!items.count) {
+            [self.navigationController pushViewController:[[RZQuickMessagesViewController alloc] init] animated:YES];
+            return;
+        }
+        RZSheet *s = [[RZSheet alloc] initWithTitle:@"Tin nhắn nhanh"];
+        for (NSDictionary *q in items) {
+            NSString *t = RZStr([q objectForKey:@"text"]);
+            NSString *label = [NSString stringWithFormat:@"/%@ · %@", RZStr([q objectForKey:@"keyword"]),
+                                                         t.length > 40 ? [[t substringToIndex:40] stringByAppendingString:@"…"] : t];
+            [s add:[label stringByReplacingOccurrencesOfString:@"\n" withString:@" "] action:^{
+                [self insertQuick:q];
+            }];
+        }
+        [s add:@"Quản lý tin nhắn nhanh…" action:^{
+            [self.navigationController pushViewController:[[RZQuickMessagesViewController alloc] init] animated:YES];
+        }];
+        [s showIn:self.view];
+    }];
+}
+
+- (void)insertQuick:(NSDictionary *)q {
+    self.field.text = RZStr([q objectForKey:@"text"]);
+    [self textViewDidChange:self.field];
+    [self.field becomeFirstResponder];
+}
+
+/// Gõ «/…» ở đầu ô nhập → hiện tin nhắn nhanh khớp phím tắt.
+- (void)updateQuickSuggest {
+    NSString *t = self.field.text;
+    BOOL want = t.length >= 1 && [t hasPrefix:@"/"] && [t rangeOfCharacterFromSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]].location == NSNotFound;
+    if (!want) {
+        self.quickTable.hidden = YES;
+        return;
+    }
+    if (!self.quickItems) {
+        self.quickItems = @[];
+        [RZCore call:@"quick.list" args:nil done:^(id ok, NSDictionary *err) {
+            self.quickItems = [ok isKindOfClass:[NSArray class]] ? ok : @[];
+            [self updateQuickSuggest];
+        }];
+        return;
+    }
+    NSString *q = RZFold([t substringFromIndex:1]);
+    NSMutableArray *m = [NSMutableArray array];
+    for (NSDictionary *it in self.quickItems)
+        if (!q.length || [RZFold(RZStr([it objectForKey:@"keyword"])) hasPrefix:q]) [m addObject:it];
+    if (!m.count) {
+        self.quickTable.hidden = YES;
+        return;
+    }
+    if (!self.quickTable) {
+        self.quickSource = [[RZQuickSuggest alloc] init];
+        __weak RZChatViewController *ws = self;
+        self.quickSource.onPick = ^(NSDictionary *item) {
+            ws.quickTable.hidden = YES;
+            [ws insertQuick:item];
+        };
+        self.quickTable = [[UITableView alloc] initWithFrame:CGRectZero style:UITableViewStylePlain];
+        self.quickTable.dataSource = self.quickSource;
+        self.quickTable.delegate = self.quickSource;
+        self.quickTable.rowHeight = 46;
+        RZStyleTable(self.quickTable);
+        self.quickTable.layer.borderColor = RZBarLine().CGColor;
+        self.quickTable.layer.borderWidth = 1;
+        [self.view addSubview:self.quickTable];
+    }
+    self.quickSource.items = m;
+    [self.quickTable reloadData];
+    self.quickTable.hidden = NO;
+    [self.view bringSubviewToFront:self.quickTable];
+    [self layoutQuick];
+}
+
+- (void)layoutQuick {
+    if (!self.quickTable || self.quickTable.hidden) return;
+    CGFloat h = MIN(self.quickSource.items.count, 4) * 46.0f;
+    CGFloat top = self.replyBar ? self.replyBar.frame.origin.y : self.inputBar.frame.origin.y;
+    self.quickTable.frame = CGRectMake(0, top - h, self.view.bounds.size.width, h);
 }
 
 - (void)sendMedia:(NSString *)method args:(NSDictionary *)args {
@@ -1025,6 +1242,18 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
 - (void)onEvent:(NSNotification *)n {
     NSDictionary *ev = n.userInfo;
     NSString *e = RZStr([ev objectForKey:@"e"]);
+    if ([e isEqualToString:@"threads.changed"] && !self.group) {
+        // Lõi vừa tra được tên người chưa kết bạn / tên gợi nhớ đổi → cập nhật thanh trên
+        [RZCore call:@"threads.get" args:@{@"thread": self.thread} done:^(id ok, NSDictionary *err) {
+            [self applyThreadName:ok];
+        }];
+        return;
+    }
+    if ([e isEqualToString:@"threads.upsert"] && !self.group) {
+        for (NSDictionary *t in [ev objectForKey:@"threads"])
+            if ([t isKindOfClass:[NSDictionary class]] && [RZStr([t objectForKey:@"key"]) isEqualToString:self.thread]) [self applyThreadName:t];
+        return;
+    }
     if (![RZStr([ev objectForKey:@"thread"]) isEqualToString:self.thread]) return;
     if ([e isEqualToString:@"msg.new"]) {
         NSDictionary *m = [ev objectForKey:@"msg"];
@@ -1124,6 +1353,14 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
         [mm setObject:@"Thành viên" forKey:@"name"];
         m = mm;
     }
+    if ([RZStr([m objectForKey:@"kind"]) isEqualToString:@"bank"] && !RZStr([[m objectForKey:@"media"] objectForKey:@"number"]).length) {
+        // Thẻ tài khoản chưa đọc → lõi tải mẫu thẻ, xong báo msg.update (bong bóng hiện ngân hàng + số tài khoản)
+        NSString *mid = RZStr([m objectForKey:@"id"]);
+        if (mid.length && ![mid hasPrefix:@"l"] && ![self.resolving containsObject:mid]) {
+            [self.resolving addObject:mid];
+            [RZCore call:@"bank.resolve" args:@{@"thread": self.thread, @"id": mid} done:nil];
+        }
+    }
     [c configure:m flags:f width:tv.bounds.size.width];
     return c;
 }
@@ -1203,6 +1440,25 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
         [self presentViewController:pv animated:YES completion:nil];
         return;
     }
+    if ([kind isEqualToString:@"contact"]) {
+        NSString *uid = RZStr([media objectForKey:@"uid"]);
+        if (uid.length) RZOpenChat(self.navigationController, [@"u" stringByAppendingString:uid], RZStr([media objectForKey:@"name"]), RZStr([media objectForKey:@"avatar"]));
+        return;
+    }
+    if ([kind isEqualToString:@"location"]) {
+        RZMapViewController *mv = [[RZMapViewController alloc] initWithLat:[[media objectForKey:@"lat"] doubleValue] lng:[[media objectForKey:@"lng"] doubleValue]
+                                                                      title:RZStr([media objectForKey:@"title"])];
+        [self.navigationController pushViewController:mv animated:YES];
+        return;
+    }
+    if ([kind isEqualToString:@"bank"]) {
+        [self openBankCard:m];
+        return;
+    }
+    if ([kind isEqualToString:@"reminder"]) {
+        [self openReminders];
+        return;
+    }
     NSString *url = nil;
     if ([kind isEqualToString:@"link"]) url = RZStr([media objectForKey:@"url"]);
     if (!url.length) {
@@ -1210,6 +1466,16 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
         NSDataDetector *dd = [NSDataDetector dataDetectorWithTypes:NSTextCheckingTypeLink error:NULL];
         NSTextCheckingResult *r = text.length ? [dd firstMatchInString:text options:0 range:NSMakeRange(0, text.length)] : nil;
         url = r.URL.absoluteString;
+    }
+    double lat = 0, lng = 0;
+    if (RZParseMapURL(url, &lat, &lng)) {
+        // Vị trí gửi dạng đường dẫn bản đồ (Roza, Zalo PC…) → xem ngay trên bản đồ
+        NSString *text = RZStr([m objectForKey:@"text"]);
+        NSString *title = [[text componentsSeparatedByString:@"\n"] objectAtIndex:0];
+        title = [title stringByReplacingOccurrencesOfString:@"📍 " withString:@""];
+        if ([title rangeOfString:@"http"].location != NSNotFound) title = @"";
+        [self.navigationController pushViewController:[[RZMapViewController alloc] initWithLat:lat lng:lng title:title] animated:YES];
+        return;
     }
     if (url.length) {
         RZSheet *s = [[RZSheet alloc] initWithTitle:url];
@@ -1221,6 +1487,43 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
         }];
         [s showIn:self.view];
     }
+}
+
+/// «Lưu vào Telegram»: gửi tin (chữ / ảnh / video / tệp / thoại — tệp gốc) vào chat với bot sao lưu, như một kho trên mây.
+- (void)saveToTelegram:(NSDictionary *)m {
+    [self showStatus:@"Đang lưu vào Telegram…"];
+    [RZCore call:@"tg.save" args:@{@"thread": self.thread, @"id": RZStr([m objectForKey:@"id"]) ?: @""} done:^(id ok, NSDictionary *err) {
+        [self showStatus:nil];
+        if (!err) {
+            NSString *bot = RZStr([ok objectForKey:@"bot"]);
+            [RZTheme toast:bot.length ? [NSString stringWithFormat:@"Đã lưu vào Telegram (@%@)", bot] : @"Đã lưu vào Telegram" in:self.view];
+            return;
+        }
+        if ([RZStr([err objectForKey:@"code"]) isEqualToString:@"NO_BOT"]) {
+            RZAlert(@"Chưa nối bot Telegram", @"Vào Thêm → Sao lưu (Telegram) để tạo bot riêng (@BotFather) và nối với Roza — tin lưu sẽ nằm trong chat với bot đó.");
+            return;
+        }
+        RZAlert(@"Chưa lưu được vào Telegram", RZErrorText(err));
+    }];
+}
+
+/// Thẻ tài khoản ngân hàng: chưa đọc thì đọc (tải mẫu thẻ), rồi mở màn mã QR chuyển khoản.
+- (void)openBankCard:(NSDictionary *)m {
+    NSDictionary *media = [m objectForKey:@"media"];
+    if (RZStr([media objectForKey:@"number"]).length) {
+        [self.navigationController pushViewController:[[RZBankCardViewController alloc] initWithCard:media] animated:YES];
+        return;
+    }
+    [self showStatus:@"Đang đọc thẻ tài khoản…"];
+    [RZCore call:@"bank.resolve" args:@{@"thread": self.thread, @"id": RZStr([m objectForKey:@"id"]) ?: @""} done:^(id ok, NSDictionary *err) {
+        [self showStatus:nil];
+        NSDictionary *md = [ok objectForKey:@"media"];
+        if (err || !RZStr([md objectForKey:@"number"]).length) {
+            RZAlert(@"Chưa đọc được thẻ tài khoản", err ? RZErrorText(err) : nil);
+            return;
+        }
+        [self.navigationController pushViewController:[[RZBankCardViewController alloc] initWithCard:md] animated:YES];
+    }];
 }
 
 - (void)longPress:(UILongPressGestureRecognizer *)g {
@@ -1253,9 +1556,21 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
         }
     }
     NSString *text = RZBodyText(m);
-    if (text.length && !RZIsImage(kind) && ![@[@"file", @"voice"] containsObject:kind]) {
+    if (text.length && !RZIsImage(kind) && ![@[@"file", @"voice", @"contact", @"location", @"bank", @"reminder"] containsObject:kind]) {
         [s add:@"Sao chép" action:^{
             [UIPasteboard generalPasteboard].string = text;
+        }];
+    }
+    NSString *bankNo = RZStr([[m objectForKey:@"media"] objectForKey:@"number"]);
+    if ([kind isEqualToString:@"bank"] && bankNo.length) {
+        [s add:@"Chép số tài khoản" action:^{
+            [UIPasteboard generalPasteboard].string = bankNo;
+            [RZTheme toast:@"Đã chép số tài khoản" in:self.view];
+        }];
+    }
+    if (!pending) {
+        [s add:@"Lưu vào Telegram" action:^{
+            [self saveToTelegram:m];
         }];
     }
     if (out && !pending) {
@@ -1290,6 +1605,68 @@ static BOOL RZSameCluster(NSDictionary *a, NSDictionary *b) {
 
 - (RZStickerPanel *)debugPanel {
     return self.stickers;
+}
+
+/// ui <việc> [tham số]: mở các màn mới không cần chạm (thử trên máy qua SSH).
+- (void)debugUI:(NSString *)arg {
+    NSArray *p = [arg componentsSeparatedByString:@" "];
+    NSString *what = p.count ? [p objectAtIndex:0] : @"";
+    NSDictionary *last = nil;
+    for (NSDictionary *m in self.msgs.reverseObjectEnumerator)
+        if ([RZStr([m objectForKey:@"kind"]) isEqualToString:p.count > 1 ? [p objectAtIndex:1] : @"bank"]) {
+            last = m;
+            break;
+        }
+    if ([what isEqualToString:@"open"] && last) {
+        // ui open <kind>: như chạm vào tin mới nhất loại đó
+        NSString *kind = RZStr([last objectForKey:@"kind"]);
+        NSDictionary *media = [last objectForKey:@"media"];
+        if ([kind isEqualToString:@"bank"]) [self openBankCard:last];
+        else if ([kind isEqualToString:@"reminder"]) [self openReminders];
+        else if ([kind isEqualToString:@"location"])
+            [self.navigationController pushViewController:[[RZMapViewController alloc] initWithLat:[[media objectForKey:@"lat"] doubleValue]
+                                                                                                  lng:[[media objectForKey:@"lng"] doubleValue]
+                                                                                                title:RZStr([media objectForKey:@"title"])]
+                                                 animated:YES];
+        else RZLog(@"[thử] ui open: không mở được loại %@", kind);
+    } else if ([what isEqualToString:@"tg"] && last) {
+        [self saveToTelegram:last];
+    } else if ([what isEqualToString:@"remind"]) {
+        [self openReminders];
+    } else if ([what isEqualToString:@"remindnew"]) {
+        [self openReminders];
+        UIViewController *top = self.navigationController.topViewController;
+        if ([top isKindOfClass:[RZReminderListViewController class]]) [top performSelector:@selector(create) withObject:nil afterDelay:0.8];
+    } else if ([what isEqualToString:@"mapview"]) {
+        [self.navigationController pushViewController:[[RZMapViewController alloc] initWithLat:21.0285 lng:105.8542 title:@"Hồ Hoàn Kiếm"] animated:YES];
+    } else if ([what isEqualToString:@"cardpick"]) {
+        RZContactsViewController *c = [[RZContactsViewController alloc] initChooserWithTitle:@"Gửi danh thiếp" onPick:^(NSDictionary *u) {
+            RZLog(@"[thử] chọn danh thiếp");
+        }];
+        [self presentViewController:[[UINavigationController alloc] initWithRootViewController:c] animated:YES completion:nil];
+    } else if ([what isEqualToString:@"quick"]) {
+        [self pickQuickMessage];
+    } else if ([what isEqualToString:@"title"]) {
+        [self titleTapped];
+    } else if ([what isEqualToString:@"loc"]) {
+        __weak RZChatViewController *ws = self;
+        [self.navigationController pushViewController:[[RZMapViewController alloc] initPickerWithDone:^(double lat, double lng, NSString *address) {
+            RZLog(@"[thử] chọn vị trí: %@", address.length ? @"có địa chỉ" : @"chỉ toạ độ");
+            [ws debugType:RZLocationText(lat, lng, address)];
+        }] animated:YES];
+    } else if ([what isEqualToString:@"qr"] || [what isEqualToString:@"card"]) {
+        // ui qr|card [bin số_tk TÊN số_tiền nội dung…]: mở biểu mẫu; có tham số thì điền và gửi luôn
+        RZBankFormViewController *f = [[RZBankFormViewController alloc] initWithThread:self.thread qr:[what isEqualToString:@"qr"]];
+        [self presentViewController:[[UINavigationController alloc] initWithRootViewController:f] animated:YES completion:nil];
+        if (p.count >= 4) {
+            NSArray *rest = [p subarrayWithRange:NSMakeRange(1, p.count - 1)];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [f debugFill:rest];
+            });
+        }
+    } else {
+        RZLog(@"[thử] ui: lệnh lạ %@", what);
+    }
 }
 
 - (NSString *)debugDump {

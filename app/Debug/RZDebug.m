@@ -16,6 +16,7 @@ static NSString *const kCmdFile = @"/var/mobile/Documents/Roza-cmd.txt";
 - (RZStickerPanel *)debugPanel;
 - (void)sendMedia:(NSString *)method args:(NSDictionary *)args;
 - (NSString *)debugDump;
+- (void)debugUI:(NSString *)arg;
 @end
 
 @interface RZStickerPanel (Debug)
@@ -164,6 +165,13 @@ static NSString *RZSummary(id v) {
         [UIViewController attemptRotationToDeviceOrientation];
     } else {
         RZChatViewController *chat = (RZChatViewController *)[self chatNav].topViewController;
+        // Màn khác đang đè lên chat (thẻ ngân hàng, nhắc hẹn…) → tìm màn chat trong ngăn
+        if (![chat isKindOfClass:[RZChatViewController class]])
+            for (UIViewController *v in [self chatNav].viewControllers.reverseObjectEnumerator)
+                if ([v isKindOfClass:[RZChatViewController class]]) {
+                    chat = (RZChatViewController *)v;
+                    break;
+                }
         if (![chat isKindOfClass:[RZChatViewController class]]) {
             RZLog(@"[thử] không có chat đang mở");
             return;
@@ -182,6 +190,7 @@ static NSString *RZSummary(id v) {
         else if ([cmd isEqualToString:@"stpick"]) [[chat debugPanel] debugPick:[arg integerValue]];
         else if ([cmd isEqualToString:@"stcount"]) RZLog(@"[thử] bảng sticker: %lu mục", (unsigned long)[[chat debugPanel] debugCount]);
         else if ([cmd isEqualToString:@"dump"]) RZLog(@"[thử] chat %@", [chat debugDump]);
+        else if ([cmd isEqualToString:@"ui"]) [chat debugUI:arg];
         else RZLog(@"[thử] lệnh lạ: %@", cmd);
     }
 }

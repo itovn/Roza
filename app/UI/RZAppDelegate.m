@@ -113,6 +113,13 @@ void RZCloseChat(NSString *thread) {
     }];
     // Thông báo cục bộ (tin mới khi app ở nền): iOS 5 / 6 chỉ hiện cho app đã đăng ký thông báo
     [[RZBackground shared] start];
+    // iOS mở lại app VoIP ở nền (sau khi bị tắt / khởi động lại máy) mà không gọi applicationDidEnterBackground → không xin thêm
+    // thời gian thì app bị treo ngay giữa lúc «đang kết nối» (nhật ký iPhone 5, 17/11/2026) và không còn socket VoIP để iOS
+    // đánh thức khi có tin. Xin thời gian chạy nền + đặt giữ kết nối như lúc vừa xuống nền.
+    if (app.applicationState == UIApplicationStateBackground) {
+        RZLog(@"mở ở nền (VoIP)");
+        [[RZBackground shared] didEnterBackground];
+    }
 #ifdef DEBUG
     [RZDebug start];
 #endif

@@ -19,7 +19,7 @@ Roza_FILES = main.m $(wildcard Core/*.m) Core/RZShims.c $(wildcard UI/*.m)
 ifneq ($(FINALPACKAGE),1)
 Roza_FILES += $(wildcard Debug/*.m)
 endif
-Roza_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore ImageIO CFNetwork Security AVFoundation CoreMedia CoreVideo MediaPlayer QuickLook AudioToolbox AssetsLibrary
+Roza_FRAMEWORKS = UIKit Foundation CoreGraphics QuartzCore ImageIO CFNetwork Security AVFoundation CoreMedia CoreVideo MediaPlayer QuickLook AudioToolbox AssetsLibrary CoreLocation
 # API mới hơn iOS 5.0 dùng thẳng là lỗi lúc dựng (TubeMini D24) — chỗ cần iOS 6 thì hỏi lúc chạy (NSClassFromString…)
 Roza_CFLAGS = -fobjc-arc -Wno-deprecated-declarations -Werror=unguarded-availability -Werror=partial-availability -ICore -IUI -IDebug
 # Lõi do tools/build-app.sh dựng ở <thư mục chứa repo>/target-ios (cạnh repo)

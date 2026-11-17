@@ -31,6 +31,10 @@ mục Thông báo). Hướng dẫn chi tiết: **https://itovn.github.io/Roza/**
 - **Sao lưu lên Telegram** (bot riêng của bạn, không kèm phiên đăng nhập), kể cả ảnh / video / tệp; khôi phục trên máy mới.
 - **Đồng bộ** với Zalo trên điện thoại / PC: lấy lại tin bị lỡ, tải lịch sử nhóm.
 - **Trò chuyện ẩn** (PIN 4 số, đồng bộ với Zalo trên điện thoại).
+- **Nhắc hẹn** trong chat (đồng bộ với Zalo, thông báo đúng giờ), **tin nhắn nhanh** (gõ «/»), **danh thiếp**, **vị trí** (bản đồ
+  OpenStreetMap), **tài khoản ngân hàng** + **mã QR chuyển khoản** (VietQR — app ngân hàng nào cũng quét được).
+- **Lưu vào Telegram**: chạm giữ một tin → gửi vào chat với bot của bạn (tệp gốc).
+- **Tên gợi nhớ** cho bất kỳ ai (cả người chưa kết bạn), đồng bộ với điện thoại.
 - Tự nối lại khi rớt mạng; báo khi Zalo Web đang mở ở nơi khác (nút «Dùng ở đây»).
 
 ## Dựng từ mã nguồn

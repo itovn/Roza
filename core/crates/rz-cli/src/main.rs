@@ -164,8 +164,81 @@ async fn main() -> R<()> {
             let r = api.send_text(Thread::User, uid, text, None, &[], rz_zalo::now_ms()).await?;
             println!("{r}");
         }
+        // ── Thử các API mới (chỉ HTTP, không mở WebSocket nên không đá kết nối của máy đang dùng phiên này) ──
+        "cloud" => {
+            let (api, _) = open(&session).await?;
+            println!("{}", api.info.raw.get("send2me_id").and_then(Value::as_str).unwrap_or("?"));
+        }
+        "banks" => {
+            let (api, _) = open(&session).await?;
+            let v = api.bank_list().await?;
+            let list = v.get("banks").and_then(Value::as_array).cloned().unwrap_or_default();
+            println!("{} ngân hàng; khoá: {:?}", list.len(), v.as_object().map(|m| m.keys().cloned().collect::<Vec<_>>()));
+            for b in list.iter().take(4) {
+                println!("  {}", short(b));
+            }
+        }
+        "bankcard" => {
+            let (to, bin, num, holder) = (args.get(1).ok_or("thiếu uid")?, args.get(2).ok_or("thiếu BIN")?, args.get(3).ok_or("thiếu số TK")?, args.get(4).cloned().unwrap_or_default());
+            let (api, _) = open(&session).await?;
+            let r = api.send_bank_card(Thread::User, to, bin.parse()?, num, &holder, rz_zalo::now_ms()).await?;
+            println!("{}", short(&r));
+        }
+        "card" => {
+            let (to, uid) = (args.get(1).ok_or("thiếu uid nhận")?, args.get(2).ok_or("thiếu uid danh thiếp")?);
+            let (api, _) = open(&session).await?;
+            let r = api.send_card(Thread::User, to, uid, "", rz_zalo::now_ms()).await?;
+            println!("{}", short(&r));
+        }
+        "reminders" => {
+            let to = args.get(1).ok_or("thiếu uid")?;
+            let (api, _) = open(&session).await?;
+            let r = api.reminder_list(Thread::User, to, 1, 20).await?;
+            println!("{}", short(&r));
+        }
+        "remind" => {
+            let (to, title, mins) = (args.get(1).ok_or("thiếu uid")?, args.get(2).ok_or("thiếu nội dung")?, args.get(3).and_then(|m| m.parse::<u64>().ok()).unwrap_or(60));
+            let (api, _) = open(&session).await?;
+            let r = api.reminder_create(Thread::User, to, title, "", rz_zalo::now_ms() + mins * 60_000, 0).await?;
+            println!("{}", short(&r));
+        }
+        "unremind" => {
+            let (to, id) = (args.get(1).ok_or("thiếu uid")?, args.get(2).ok_or("thiếu mã nhắc hẹn")?);
+            let (api, _) = open(&session).await?;
+            println!("{}", short(&api.reminder_remove(Thread::User, to, id).await?));
+        }
+        "quick" => {
+            let (api, _) = open(&session).await?;
+            let v = api.quick_list().await?;
+            println!("{} tin nhắn nhanh; khoá: {:?}", v.get("items").and_then(Value::as_array).map_or(0, |a| a.len()),
+                     v.as_object().map(|m| m.keys().cloned().collect::<Vec<_>>()));
+        }
+        "aliases" => {
+            let (api, _) = open(&session).await?;
+            let v = api.alias_list(1, 100).await?;
+            println!("{} tên gợi nhớ; khoá: {:?}", v.get("items").and_then(Value::as_array).map_or(0, |a| a.len()),
+                     v.as_object().map(|m| m.keys().cloned().collect::<Vec<_>>()));
+        }
+        "userinfo" => {
+            // In cấu trúc (khoá, có / không có tên) — không in tên
+            let uid = args.get(1).ok_or("thiếu uid")?;
+            let (api, _) = open(&session).await?;
+            let v = api.user_info(&[uid.clone()], 120).await?;
+            for k in ["changed_profiles", "unchanged_profiles"] {
+                let m = v.get(k).and_then(Value::as_object).cloned().unwrap_or_default();
+                println!("{k}: {} mục, khoá {:?}", m.len(), m.keys().map(|x| x.chars().take(6).collect::<String>()).collect::<Vec<_>>());
+                for (_, p) in m {
+                    println!("  userId {} · displayName {} · zaloName {} · avatar {}", p.get("userId").is_some(),
+                             p.get("displayName").and_then(Value::as_str).map_or("không", |s| if s.is_empty() { "rỗng" } else { "có" }),
+                             p.get("zaloName").and_then(Value::as_str).map_or("không", |s| if s.is_empty() { "rỗng" } else { "có" }),
+                             p.get("avatar").and_then(Value::as_str).map_or("không", |s| if s.is_empty() { "rỗng" } else { "có" }));
+                }
+            }
+        }
         _ => {
             eprintln!("rz-cli qr [tệp.png] | me | friends | groups | listen [giây] | send <uid> <chữ>   [--session tệp]");
+            eprintln!("       cloud | banks | bankcard <uid> <bin> <số TK> [tên] | card <uid nhận> <uid> | reminders <uid> | remind <uid> <nội dung> [phút]");
+            eprintln!("       unremind <uid> <mã> | quick | aliases | userinfo <uid>");
         }
     }
     Ok(())

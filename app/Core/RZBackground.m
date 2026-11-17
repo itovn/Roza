@@ -1,6 +1,7 @@
 #import "RZBackground.h"
 #import "RZCore.h"
 #import "RZLog.h"
+#import "RZExtras.h"
 #import <CFNetwork/CFNetwork.h>
 #include <fcntl.h>
 
@@ -137,7 +138,12 @@ static void RZVoipReadable(CFReadStreamRef stream, CFStreamEventType type, void 
         [app endBackgroundTask:_task];
         _task = UIBackgroundTaskInvalid;
     }
-    [app cancelAllLocalNotifications];  // thông báo cũ trong Trung tâm thông báo
+    // Xoá thông báo cũ trong Trung tâm thông báo — nhưng giữ thông báo nhắc hẹn đã hẹn giờ (cancelAll xoá cả chúng)
+    NSMutableArray *keep = [NSMutableArray array];
+    for (UILocalNotification *ln in app.scheduledLocalNotifications)
+        if ([ln.userInfo objectForKey:@"reminder"]) [keep addObject:ln];
+    [app cancelAllLocalNotifications];
+    for (UILocalNotification *ln in keep) [app scheduleLocalNotification:ln];
     [RZCore call:@"net.check" args:nil done:nil];
 }
 
@@ -148,6 +154,15 @@ static void RZVoipReadable(CFReadStreamRef stream, CFStreamEventType type, void 
     NSString *e = RZStr([ev objectForKey:@"e"]);
     if ([e isEqualToString:@"net.socket"]) {
         [self adoptSocket:(int)RZLL([ev objectForKey:@"fd"]) quiet:NO];
+        return;
+    }
+    if ([e isEqualToString:@"msg.new"]) {
+        // Nhắc hẹn (mình hoặc người khác tạo, kể cả từ điện thoại) → hẹn thông báo trên máy đúng giờ
+        NSDictionary *m = [ev objectForKey:@"msg"];
+        if ([RZStr([m objectForKey:@"kind"]) isEqualToString:@"reminder"]) {
+            NSDictionary *r = [m objectForKey:@"media"];
+            if (RZStr([r objectForKey:@"id"]).length) RZScheduleReminder(r, RZStr([ev objectForKey:@"thread"]), nil);
+        }
         return;
     }
     if (![e isEqualToString:@"notify"]) return;

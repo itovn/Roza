@@ -5,8 +5,10 @@ mod media;
 mod upload;
 mod backup;
 mod sync;
+mod extras;
 pub mod msg;
 pub mod store;
+pub mod vietqr;
 
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicU64, Ordering};
@@ -669,6 +671,21 @@ impl Core {
         self.refresh_friends().await;
         self.refresh_groups().await;
         self.sync_hidden().await;
+        self.sync_aliases().await;
+        {
+            // Một lần sau khi cập nhật: đọc lại tin cũ theo loại tin mới nhận ra (danh thiếp, thẻ ngân hàng, nhắc hẹn…)
+            let mut st = self.store.lock().unwrap();
+            if st.kv_get("renorm").as_deref() != Some("2") {
+                let n = st.renormalize(&api.info.uid);
+                st.kv_set("renorm", "2");
+                drop(st);
+                self.log(&format!("đọc lại {n} tin theo loại mới"));
+            }
+        }
+        {
+            let missing = self.store.lock().unwrap().thread_users_missing();
+            self.pending_users.lock().unwrap().extend(missing);
+        }
         if let Ok(v) = api.pinned().await {
             let keys: Vec<String> = v
                 .get("conversations")
@@ -699,6 +716,54 @@ impl Core {
         self.ev("threads.changed", json!({}));
         self.ev("contacts.changed", json!({}));
         self.lookup_wake.notify_one();
+    }
+
+    /// Tên gợi nhớ từ máy chủ (đồng bộ với Zalo trên điện thoại).
+    async fn sync_aliases(&self) {
+        let Ok(api) = self.api() else { return };
+        let mut items: Vec<(String, String)> = Vec::new();
+        for page in 1..=20u32 {
+            let v = match api.alias_list(page, 100).await {
+                Ok(v) => v,
+                Err(e) => {
+                    self.log(&format!("tên gợi nhớ lỗi: {e}"));
+                    return;  // lỗi giữa chừng: giữ danh sách cũ
+                }
+            };
+            let got = v.get("items").and_then(Value::as_array).cloned().unwrap_or_default();
+            for x in &got {
+                let (uid, alias) = (s(x, "userId"), s(x, "alias"));
+                if !uid.is_empty() && !alias.trim().is_empty() {
+                    items.push((uid, alias));
+                }
+            }
+            if got.len() < 100 {
+                break;
+            }
+        }
+        self.log(&format!("tên gợi nhớ: {}", items.len()));
+        self.store.lock().unwrap().set_aliases(&items);
+    }
+
+    /// Đặt (hoặc bỏ, khi `alias` rỗng) tên gợi nhớ cho một người — cả người chưa kết bạn.
+    async fn alias_set(&self, uid: &str, alias: &str) -> R<Value> {
+        let alias = alias.trim();
+        if uid.is_empty() {
+            return Err(CoreError::new("BAD_ARGS", "Thiếu người cần đặt tên"));
+        }
+        if alias.chars().count() > 50 {
+            return Err(CoreError::new("BAD_ARGS", "Tên gợi nhớ tối đa 50 ký tự"));
+        }
+        let api = self.api()?;
+        if alias.is_empty() {
+            api.alias_remove(uid).await?;
+        } else {
+            api.alias_set(uid, alias).await?;
+        }
+        self.store.lock().unwrap().set_alias(uid, alias);
+        self.ev("threads.changed", json!({}));
+        self.ev("contacts.changed", json!({}));
+        Ok(self.store.lock().unwrap().user(uid).unwrap_or(json!({"uid": uid, "name": alias, "alias": alias})))
     }
 
     /// Trò chuyện ẩn + PIN từ máy chủ (đồng bộ với điện thoại).
@@ -864,6 +929,13 @@ impl Core {
                 tokio::spawn(async move { me.send_seen(&t2).await });
                 let t = self.store.lock().unwrap().thread(&thread);
                 self.ev("threads.upsert", json!({"threads": [t.clone()]}));
+                // Chat 1-1 chưa có thông tin người (vd. mình nhắn trước cho người lạ) → hỏi getUserInfo, có tên thì báo threads.changed
+                if let Some(uid) = thread.strip_prefix('u') {
+                    if self.store.lock().unwrap().user_brief(uid).1.is_empty() {
+                        self.pending_users.lock().unwrap().insert(uid.to_string());
+                        self.lookup_wake.notify_one();
+                    }
+                }
                 Ok(t)
             }
             "messages.close" => {
@@ -977,7 +1049,11 @@ impl Core {
             }
             "contacts.find" => {
                 let v = self.api()?.find_user(&gs("phone")).await?;
-                self.store.lock().unwrap().put_user(&v, None);
+                // Kết quả tìm theo số dùng tên trường khác getUserInfo (uid / display_name / zalo_name) — đổi lại cho put_user,
+                // không thì người lạ tìm được không được lưu tên → chat với họ chỉ hiện «Người dùng Zalo»
+                let u = json!({"userId": s(&v, "uid"), "displayName": s(&v, "display_name"), "zaloName": s(&v, "zalo_name"),
+                               "avatar": s(&v, "avatar"), "phoneNumber": s(&v, "phone_number")});
+                self.store.lock().unwrap().put_user(&u, None);
                 Ok(json!({"uid": s(&v, "uid"), "name": s(&v, "display_name"), "zname": s(&v, "zalo_name"), "avatar": s(&v, "avatar")}))
             }
             "groups.list" => Ok(json!(self.store.lock().unwrap().groups())),
@@ -1081,6 +1157,24 @@ impl Core {
                 self.ev("threads.changed", json!({}));
                 Ok(json!({"hidden": hide}))
             }
+            "alias.set" => self.alias_set(&gs("uid"), &gs("alias")).await,
+            "card.send" => self.card_send(&gs("thread"), &gs("uid"), &gs("phone")).await,
+            "bank.list" => self.bank_list().await,
+            "bank.accounts" => self.bank_accounts().await,
+            "bank.addAccount" => self.bank_account_add(gi("bin", 0), &gs("number"), &gs("holder")).await,
+            "bank.removeAccount" => self.bank_account_remove(gi("id", 0), a.get("default").and_then(Value::as_bool).unwrap_or(false)).await,
+            "bank.resolve" => self.bank_resolve(&gs("thread"), &gs("id")).await,
+            "bank.sendCard" => self.bank_send_card(&gs("thread"), gi("bin", 0), &gs("number"), &gs("holder")).await,
+            "vietqr.make" => self.vietqr_make(gi("bin", 0), &gs("number"), gi("amount", 0), &gs("note")),
+            "map.address" => self.map_address(a.get("lat").and_then(Value::as_f64).unwrap_or(999.0), a.get("lng").and_then(Value::as_f64).unwrap_or(999.0)).await,
+            "map.tile" => self.map_tile(gi("z", 0), gi("x", -1), gi("y", -1)).await,
+            "reminders.list" => self.reminders_list(&gs("thread")).await,
+            "reminders.save" => self.reminder_save(&gs("thread"), &gs("id"), &gs("title"), &gs("emoji"), gi("ts", 0), gi("repeat", 0)).await,
+            "reminders.remove" => self.reminder_remove(&gs("thread"), &gs("id")).await,
+            "quick.list" => self.quick_list(a.get("refresh").and_then(Value::as_bool).unwrap_or(false)).await,
+            "quick.save" => self.quick_save(gi("id", 0), &gs("keyword"), &gs("text")).await,
+            "quick.remove" => self.quick_remove(gi("id", 0)).await,
+            "tg.save" => Box::pin(self.tg_save(&gs("thread"), &gs("id"))).await,
             "sync.state" => Ok(self.sync_state()),
             "sync.now" => self.sync_now(),
             "sync.groups" => Box::pin(self.sync_groups(gi("max", 300))).await,

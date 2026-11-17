@@ -200,3 +200,34 @@ Thiết kế đầy đủ: [THIET-KE.md](THIET-KE.md).
   chặn `wpa.chat.zalo.me` để không đá phiên của iPhone; thử xong xoá phiên trên iPad, gỡ chặn. `cbsymcheck` 418 / 418.
   Lệnh thử mới (bản debug): `orient 1|2|3|4` (API riêng UIDevice), `close`. iPad 1 không xoay được bằng lệnh (khoá xoay?) — chiều
   ngang trên iOS 5 chưa thử lại.
+
+## D21. Nhắc hẹn, vị trí, tin nhắn nhanh, ngân hàng + VietQR, danh thiếp, lưu Telegram, tên gợi nhớ — 17/11/2026
+
+- Anh yêu cầu thêm: nhắc hẹn, vị trí, tin nhắn nhanh, chuyển khoản, danh thiếp, «Save to Cloud Telegram», gửi số tài khoản; rồi
+  thêm: đặt tên riêng cho một tài khoản bất kỳ, và lỗi chat với người chưa kết bạn chỉ hiện «Người dùng Zalo».
+- Anh chọn: **chuyển khoản = mã VietQR** (ZaloPay không có API cho Zalo Web, iOS 6 không có app ZaloPay); **lưu Telegram = chat với
+  bot sao lưu** (không đăng nhập Telegram).
+- Dạng tin thật (gửi thử vào «Cloud của tôi» bằng `rz-cli`, chỉ HTTP — không mở WebSocket nên không đá kết nối của iPhone):
+  danh thiếp `chat.recommended` (`params` = chính uid, kiểu số — bản trước đọc sai); thẻ ngân hàng `chat.webcontent` /
+  `zinstant.bankcard` — dữ liệu nằm trong mẫu zinstant (gzip, FlatBuffers) tải từ `data_url`: chuỗi VietQR trong nút «Lưu tài
+  khoản», chủ tài khoản đứng trước số tài khoản, tên ngân hàng ngay sau (`vietqr::bank_card`); nhắc hẹn `chat.ecard` (dữ liệu
+  `params.actions[].data` lồng hai lớp chuỗi JSON); dòng «X tạo nhắc hẹn mới…» là `webchat` + `msginfo.actionlist` → tin hệ thống.
+  Danh sách nhắc hẹn rỗng thì máy chủ trả lỗi -1. Tin cũ đọc lại một lần theo loại mới (`Store::renormalize`, kv `renorm=2`).
+- VietQR tự dựng (chuẩn EMVCo / NAPAS, CRC-16/CCITT-FALSE) + crate `qrcode` (Rust thuần) → ma trận; app vẽ thẻ (ngân hàng, số TK,
+  chủ TK, số tiền, nội dung) rồi gửi như ảnh, kèm một tin chữ để người nhận chép số tài khoản.
+- Bản đồ: MapKit trên iOS 5 / 6 chỉ còn lưới trống (máy chủ ô của Apple / Google cho iOS cũ đã tắt) → tự ghép ô OpenStreetMap,
+  lõi tải (TLS của iOS 6 không vào được), User-Agent nêu tên app, ghi «© OpenStreetMap»; địa chỉ tra bằng Nominatim (tiếng
+  Việt). Gửi vị trí = tin chữ «📍 địa chỉ» + đường dẫn Google Maps (Zalo Web không có API gửi tin vị trí; Zalo nào cũng mở được);
+  chạm vào đường dẫn bản đồ trong chat → xem trên bản đồ.
+- Người lạ không tên: `contacts.find` lưu sai tên trường (`uid` / `display_name` / `zalo_name` của API tìm theo số, khác
+  getUserInfo) và chat do mình nhắn trước không bao giờ hỏi getUserInfo (tin của mình về qua HTTP, bỏ qua bước tra người).
+  Sửa: lưu đúng tên trường; mở chat 1-1 chưa có thông tin → tra ngay; sau đăng nhập tra mọi chat 1-1 còn thiếu. getUserInfo trả đủ
+  tên + ảnh cho người lạ (đã thử).
+- Tên gợi nhớ: `/api/alias/*` (đồng bộ với điện thoại), cột `users.alias`; tên hiện = gợi nhớ > tên hiển thị > tên Zalo, cả tên
+  người gửi trong nhóm. Đặt: chạm tiêu đề màn chat → «Đặt tên gợi nhớ…», hoặc chạm giữ một người trong Danh bạ.
+- Nhắc hẹn: thông báo trên máy (UILocalNotification, lặp ngày / tuần / tháng) cho nhắc hẹn mình tạo và nhắc hẹn nhận được; mở app
+  không xoá các thông báo đã hẹn giờ này.
+- Chạy nền: iOS mở lại app VoIP ở nền (sau khi bị tắt / khởi động lại) mà không gọi applicationDidEnterBackground → app treo giữa
+  lúc «đang kết nối» (nhật ký iPhone kẹt từ 16:13). Sửa: mở ở nền thì xin thời gian chạy nền + giữ kết nối ngay.
+- Thử trên iPad mini 1 (phiên chép từ iPhone, iPhone tạm bị ngắt): bong bóng 4 loại mới, thẻ ngân hàng tự đọc, màn mã QR, gửi mã QR
+  chuyển khoản (ảnh + chữ), gợi ý «/», nhắc hẹn, bản đồ OSM, tra địa chỉ, lưu Telegram (chữ + ảnh). `cbsymcheck` 432 / 432.

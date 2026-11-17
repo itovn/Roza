@@ -653,6 +653,176 @@ impl Api {
         self.post_enc("profile", "/api/social/profile/setmute", &[], p).await
     }
 
+    // ───── Tên gợi nhớ (getAliasList / changeFriendAlias / removeFriendAlias) — đồng bộ với Zalo trên điện thoại ─────
+
+    /// `{items: [{userId, alias}], updateTime}` — trang `page` từ 1.
+    pub async fn alias_list(&self, page: u32, count: u32) -> Result<Value, Error> {
+        self.get_enc("alias", "/api/alias/list", json!({"page": page, "count": count, "imei": self.info.imei})).await
+    }
+
+    /// Đặt tên gợi nhớ cho `uid` (cả người chưa kết bạn).
+    pub async fn alias_set(&self, uid: &str, alias: &str) -> Result<Value, Error> {
+        self.get_enc("alias", "/api/alias/update", json!({"friendId": uid, "alias": alias, "imei": self.info.imei})).await
+    }
+
+    pub async fn alias_remove(&self, uid: &str) -> Result<Value, Error> {
+        self.get_enc("alias", "/api/alias/remove", json!({"friendId": uid})).await
+    }
+
+    // ───── Danh thiếp, tài khoản ngân hàng (sendCard / getQR / sendBankCard / getListBank / *BankAccount của zca-js) ─────
+
+    /// Mã QR kết bạn của các uid → `{uid: url}`.
+    pub async fn user_qr(&self, uids: &[String]) -> Result<Value, Error> {
+        self.post_enc("friend", "/api/friend/mget-qr", &[], json!({"fids": uids})).await
+    }
+
+    /// Gửi danh thiếp của `uid` (msgType 6). Người nhận thấy thẻ có ảnh, tên, nút nhắn tin / kết bạn.
+    pub async fn send_card(&self, thread: Thread, thread_id: &str, uid: &str, phone: &str, client_id: u64) -> Result<Value, Error> {
+        let qr = self.user_qr(&[uid.to_string()]).await.ok().and_then(|v| v.get(uid).and_then(Value::as_str).map(String::from)).unwrap_or_default();
+        let mut info = json!({"contactUid": uid, "qrCodeUrl": qr});
+        if !phone.is_empty() {
+            info["phone"] = json!(phone);
+        }
+        let mut p = json!({"ttl": 0, "msgType": 6, "clientId": client_id.to_string(), "msgInfo": info.to_string()});
+        let dir = match thread {
+            Thread::User => {
+                p["toId"] = json!(thread_id);
+                p["imei"] = json!(self.info.imei);
+                "message"
+            }
+            Thread::Group => {
+                p["grid"] = json!(thread_id);
+                p["visibility"] = json!(0);
+                "group"
+            }
+        };
+        self.post_enc("file", &format!("/api/{dir}/forward"), &[], p).await
+    }
+
+    /// Gửi thẻ tài khoản ngân hàng (Zalo hiện thẻ có mã VietQR). `bin` = mã BIN ngân hàng (vd. 970436 Vietcombank).
+    pub async fn send_bank_card(&self, thread: Thread, thread_id: &str, bin: i64, number: &str, holder: &str, client_id: u64) -> Result<Value, Error> {
+        let holder = if holder.trim().is_empty() { "---".to_string() } else { crate::text::fold_upper(holder) };
+        let p = json!({
+            "binBank": bin, "numAccBank": number, "nameAccBank": holder, "cliMsgId": client_id.to_string(), "tsMsg": now_ms(),
+            "destUid": thread_id, "destType": if thread == Thread::Group { 1 } else { 0 },
+        });
+        self.post_enc("zimsg", "/api/transfer/card", &[], p).await
+    }
+
+    /// Danh sách ngân hàng Zalo hỗ trợ → `{banks: [{bin, logo, name, name_eng, short_name, search_key_word}]}`.
+    pub async fn bank_list(&self) -> Result<Value, Error> {
+        self.get_enc("zimsg", "/api/transfer/conf", json!({})).await
+    }
+
+    /// Tài khoản ngân hàng đã lưu trong Zalo (đồng bộ với điện thoại).
+    pub async fn bank_accounts(&self) -> Result<Value, Error> {
+        self.get_enc("zimsg", "/api/transfer/list", json!({"page": 0, "limit": 20})).await
+    }
+
+    /// Lưu một tài khoản ngân hàng vào Zalo. Lỗi -263 = đã có.
+    pub async fn bank_account_add(&self, bin: i64, number: &str, holder: &str) -> Result<Value, Error> {
+        let p = json!({"bin": bin, "bank_number": number, "holder_name": crate::text::fold_upper(holder), "language": "vi"});
+        self.post_enc("zimsg", "/api/transfer/create", &[], p).await
+    }
+
+    /// Xoá tài khoản ngân hàng đã lưu (`account_id` từ `bank_accounts`).
+    pub async fn bank_account_remove(&self, account_id: i64, is_default: bool) -> Result<Value, Error> {
+        self.post_enc("zimsg", "/api/transfer/delete", &[], json!({"account_id": account_id, "is_default": is_default, "language": "vi"})).await
+    }
+
+    // ───── Nhắc hẹn (createReminder / editReminder / removeReminder / getListReminder) ─────
+
+    /// Tạo nhắc hẹn trong cuộc trò chuyện. `repeat`: 0 không lặp, 1 hằng ngày, 2 hằng tuần, 3 hằng tháng.
+    pub async fn reminder_create(&self, thread: Thread, thread_id: &str, title: &str, emoji: &str, start_ms: u64, repeat: i64) -> Result<Value, Error> {
+        let emoji = if emoji.is_empty() { "⏰" } else { emoji };
+        match thread {
+            Thread::User => {
+                let obj = json!({
+                    "toUid": thread_id, "type": 0, "color": -16245706, "emoji": emoji, "startTime": start_ms, "duration": -1,
+                    "params": {"title": title}, "needPin": false, "repeat": repeat, "creatorUid": self.info.uid, "src": 1,
+                });
+                self.post_enc("group_board", "/api/board/oneone/create", &[], json!({"objectData": obj.to_string(), "imei": self.info.imei})).await
+            }
+            Thread::Group => {
+                let p = json!({
+                    "grid": thread_id, "type": 0, "color": -16245706, "emoji": emoji, "startTime": start_ms, "duration": -1,
+                    "params": json!({"title": title}).to_string(), "repeat": repeat, "src": 1, "imei": self.info.imei, "pinAct": 0,
+                });
+                self.post_enc("group_board", "/api/board/topic/createv2", &[], p).await
+            }
+        }
+    }
+
+    /// Sửa nhắc hẹn `id` (reminderId / topicId).
+    #[allow(clippy::too_many_arguments)]
+    pub async fn reminder_edit(&self, thread: Thread, thread_id: &str, id: &str, title: &str, emoji: &str, start_ms: u64, repeat: i64) -> Result<Value, Error> {
+        match thread {
+            Thread::User => {
+                let obj = json!({
+                    "toUid": thread_id, "type": 0, "color": -16777216, "emoji": emoji, "startTime": start_ms, "duration": -1,
+                    "params": {"title": title}, "needPin": false, "reminderId": id, "repeat": repeat,
+                });
+                self.post_enc("group_board", "/api/board/oneone/update", &[], json!({"objectData": obj.to_string()})).await
+            }
+            Thread::Group => {
+                let p = json!({
+                    "grid": thread_id, "type": 0, "color": -16777216, "emoji": emoji, "startTime": start_ms, "duration": -1,
+                    "params": json!({"title": title}).to_string(), "topicId": id, "repeat": repeat, "imei": self.info.imei, "pinAct": 2,
+                });
+                self.post_enc("group_board", "/api/board/topic/updatev2", &[], p).await
+            }
+        }
+    }
+
+    pub async fn reminder_remove(&self, thread: Thread, thread_id: &str, id: &str) -> Result<Value, Error> {
+        match thread {
+            Thread::User => self.post_enc("group_board", "/api/board/oneone/remove", &[], json!({"uid": thread_id, "reminderId": id})).await,
+            Thread::Group => {
+                self.post_enc("group_board", "/api/board/topic/remove", &[], json!({"grid": thread_id, "topicId": id, "imei": self.info.imei})).await
+            }
+        }
+    }
+
+    /// Các nhắc hẹn của cuộc trò chuyện (mảng; trang `page` từ 1).
+    pub async fn reminder_list(&self, thread: Thread, thread_id: &str, page: u32, count: u32) -> Result<Value, Error> {
+        let (path, obj) = match thread {
+            Thread::User => (
+                "/api/board/oneone/list",
+                json!({"uid": thread_id, "board_type": 1, "page": page, "count": count, "last_id": 0, "last_type": 0}),
+            ),
+            Thread::Group => (
+                "/api/board/listReminder",
+                json!({"group_id": thread_id, "board_type": 1, "page": page, "count": count, "last_id": 0, "last_type": 0}),
+            ),
+        };
+        let mut p = json!({"objectData": obj.to_string()});
+        if thread == Thread::Group {
+            p["imei"] = json!(self.info.imei);
+        }
+        self.get_enc("group_board", path, p).await
+    }
+
+    // ───── Tin nhắn nhanh (getQuickMessageList / add / update / remove) — đồng bộ với Zalo trên điện thoại ─────
+
+    /// `{cursor, version, items: [{id, keyword, type, message: {title}}]}`
+    pub async fn quick_list(&self) -> Result<Value, Error> {
+        self.get_enc("quick_message", "/api/quickmessage/list", json!({"version": 0, "lang": 0, "imei": self.info.imei})).await
+    }
+
+    pub async fn quick_add(&self, keyword: &str, text: &str) -> Result<Value, Error> {
+        let p = json!({"keyword": keyword, "message": {"title": text, "params": ""}, "type": 0, "imei": self.info.imei});
+        self.get_enc("quick_message", "/api/quickmessage/create", p).await
+    }
+
+    pub async fn quick_update(&self, id: i64, keyword: &str, text: &str) -> Result<Value, Error> {
+        let p = json!({"itemId": id, "keyword": keyword, "message": {"title": text, "params": ""}, "type": 0});
+        self.get_enc("quick_message", "/api/quickmessage/update", p).await
+    }
+
+    pub async fn quick_remove(&self, ids: &[i64]) -> Result<Value, Error> {
+        self.get_enc("quick_message", "/api/quickmessage/delete", json!({"itemIds": ids})).await
+    }
+
     /// Đăng xuất phiên web hiện tại (best-effort — Zalo Web chỉ xoá cookie phía máy).
     pub async fn logout(&self) -> Result<(), Error> {
         let _ = self.http.get("https://id.zalo.me/account/logout?continue=https%3A%2F%2Fchat.zalo.me%2F", &[]).await;

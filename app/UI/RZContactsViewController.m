@@ -7,6 +7,7 @@
 
 @interface RZContactsViewController () <UISearchBarDelegate, UIAlertViewDelegate>
 @property (nonatomic, assign) BOOL picker;
+@property (nonatomic, copy) void (^onPick)(NSDictionary *user);
 @property (nonatomic, strong) NSArray *all;
 @property (nonatomic, strong) NSArray *sections;  // @[@{title, rows}]
 @property (nonatomic, strong) UISearchBar *search;
@@ -34,9 +35,28 @@
     return self;
 }
 
+- (instancetype)initChooserWithTitle:(NSString *)title onPick:(void (^)(NSDictionary *user))onPick {
+    if ((self = [self init])) {
+        _picker = YES;
+        _onPick = [onPick copy];
+        self.title = title;
+    }
+    return self;
+}
+
+- (void)cancelChooser {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+
 - (void)viewDidLoad {
     [super viewDidLoad];
     self.tableView.rowHeight = 60;
+    if (self.onPick)
+        self.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel target:self
+                                                                                              action:@selector(cancelChooser)];
+    // Chạm giữ một người → đặt tên gợi nhớ (đồng bộ với Zalo trên điện thoại)
+    UILongPressGestureRecognizer *lp = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(longPress:)];
+    [self.tableView addGestureRecognizer:lp];
     RZStyleTable(self.tableView);
     self.search = [[UISearchBar alloc] initWithFrame:CGRectMake(0, 0, self.view.bounds.size.width, 44)];
     self.search.placeholder = @"Tìm bạn";
@@ -191,9 +211,24 @@
     return c;
 }
 
+- (void)longPress:(UILongPressGestureRecognizer *)g {
+    if (g.state != UIGestureRecognizerStateBegan || self.onPick) return;
+    NSIndexPath *ip = [self.tableView indexPathForRowAtPoint:[g locationInView:self.tableView]];
+    if (!ip || ip.section >= (NSInteger)self.sections.count) return;
+    NSDictionary *u = [[[self.sections objectAtIndex:ip.section] objectForKey:@"rows"] objectAtIndex:ip.row];
+    RZEditAlias(RZStr([u objectForKey:@"uid"]), RZStr([u objectForKey:@"name"]), nil);
+}
+
 - (void)tableView:(UITableView *)tv didSelectRowAtIndexPath:(NSIndexPath *)ip {
     NSDictionary *u = [[[self.sections objectAtIndex:ip.section] objectForKey:@"rows"] objectAtIndex:ip.row];
     [self.search resignFirstResponder];
+    if (self.onPick) {
+        void (^pick)(NSDictionary *) = self.onPick;
+        [self dismissViewControllerAnimated:YES completion:^{
+            pick(u);
+        }];
+        return;
+    }
     NSString *thread = [@"u" stringByAppendingString:RZStr([u objectForKey:@"uid"]) ?: @""];
     UINavigationController *nav = self.navigationController;
     if (RZPad()) [tv deselectRowAtIndexPath:ip animated:YES];  // iPad: chat mở bên phải, danh bạ vẫn hiện

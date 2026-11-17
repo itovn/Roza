@@ -844,6 +844,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "qrcode"
+version = "0.14.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d68782463e408eb1e668cf6152704bd856c78c5b6417adaee3203d8f4c1fc9ec"
+
+[[package]]
 name = "quick-error"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1139,7 +1145,7 @@ checksum = "9774ba4a74de5f7b1c1451ed6cd5285a32eddb5cccb8cc655a4e50009e06477f"
 
 [[package]]
 name = "rz-cli"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "base64 0.22.1",
  "rz-zalo",
@@ -1149,13 +1155,14 @@ dependencies = [
 
 [[package]]
 name = "rz-core"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "base64 0.22.1",
  "flate2",
  "image-webp",
  "md-5",
  "png",
+ "qrcode",
  "reqwest",
  "rusqlite",
  "rz-zalo",
@@ -1166,7 +1173,7 @@ dependencies = [
 
 [[package]]
 name = "rz-ffi"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "rz-core",
  "serde_json",
@@ -1175,7 +1182,7 @@ dependencies = [
 
 [[package]]
 name = "rz-zalo"
-version = "1.1.0"
+version = "1.2.0"
 dependencies = [
  "aes",
  "aes-gcm",

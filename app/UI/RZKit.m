@@ -1,6 +1,7 @@
 #import "RZKit.h"
 #import "RZAppDelegate.h"
 #import "RZChatViewController.h"
+#import "RZCore.h"
 #import "RZTheme.h"
 
 @interface RZSheet () <UIActionSheetDelegate>
@@ -71,6 +72,61 @@
     self.selfRef = nil;
 }
 @end
+
+@interface RZTextBox : NSObject <UIAlertViewDelegate>
+@property (nonatomic, copy) void (^done)(NSString *);
+@property (nonatomic, strong) RZTextBox *selfRef;
+@end
+
+@implementation RZTextBox
+- (void)alertView:(UIAlertView *)av didDismissWithButtonIndex:(NSInteger)i {
+    NSString *t = [[av textFieldAtIndex:0].text stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+    if (i != av.cancelButtonIndex && self.done) self.done(t ?: @"");
+    self.selfRef = nil;
+}
+@end
+
+void RZAskText(NSString *title, NSString *msg, NSString *value, NSString *placeholder, UIKeyboardType kb, void (^done)(NSString *text)) {
+    RZTextBox *box = [[RZTextBox alloc] init];
+    box.done = done;
+    box.selfRef = box;
+    UIAlertView *av = [[UIAlertView alloc] initWithTitle:title message:msg delegate:box cancelButtonTitle:@"Huỷ" otherButtonTitles:@"OK", nil];
+    av.alertViewStyle = UIAlertViewStylePlainTextInput;
+    UITextField *f = [av textFieldAtIndex:0];
+    f.text = value;
+    f.placeholder = placeholder;
+    f.keyboardType = kb;
+    f.clearButtonMode = UITextFieldViewModeWhileEditing;
+    f.autocapitalizationType = UITextAutocapitalizationTypeSentences;
+    [av show];
+}
+
+void RZEditAlias(NSString *uid, NSString *shown, void (^done)(NSString *name)) {
+    if (!uid.length) return;
+    [RZCore call:@"user.info" args:@{@"uid": uid} done:^(id u, NSDictionary *err) {
+        NSString *alias = RZStr([u objectForKey:@"alias"]) ?: @"";
+        NSString *real = RZStr([u objectForKey:@"real_name"]);
+        if (!real.length) real = alias.length ? @"" : shown;
+        NSString *msg = real.length ? [NSString stringWithFormat:@"Tên Zalo: %@\nĐể trống để bỏ tên gợi nhớ.", real] : @"Để trống để bỏ tên gợi nhớ.";
+        RZAskText(@"Đặt tên gợi nhớ", msg, alias, @"Tên gợi nhớ", UIKeyboardTypeDefault, ^(NSString *text) {
+            [RZCore call:@"alias.set" args:@{@"uid": uid, @"alias": text ?: @""} done:^(id ok, NSDictionary *err2) {
+                if (err2) {
+                    RZAlert(@"Chưa đặt được tên gợi nhớ", RZErrorText(err2));
+                    return;
+                }
+                NSString *name = RZStr([ok objectForKey:@"name"]);
+                if (done) done(name.length ? name : (text.length ? text : real));
+            }];
+        });
+    }];
+}
+
+NSString *RZMoney(long long amount) {
+    NSMutableString *s = [NSMutableString stringWithFormat:@"%lld", amount < 0 ? -amount : amount];
+    for (NSInteger i = (NSInteger)s.length - 3; i > 0; i -= 3) [s insertString:@"." atIndex:(NSUInteger)i];
+    if (amount < 0) [s insertString:@"-" atIndex:0];
+    return s;
+}
 
 void RZAskPin(NSString *title, NSString *msg, void (^done)(NSString *pin)) {
     RZPinBox *box = [[RZPinBox alloc] init];

@@ -5,7 +5,7 @@
 //! - [`login`]: đăng nhập QR, đăng nhập lại bằng cookie (khoá phiên `zpw_enk`).
 //! - [`api`]: các lệnh HTTP (gửi tin, đã xem, bạn bè, nhóm…).
 //! - [`listen`]: WebSocket nhận tin / sự kiện.
-//! - [`crypto`], [`cookies`], [`http`]: phần nền.
+//! - [`crypto`], [`cookies`], [`http`], [`text`]: phần nền.
 
 pub mod api;
 pub mod cookies;
@@ -14,6 +14,7 @@ mod error;
 pub mod http;
 pub mod listen;
 pub mod login;
+pub mod text;
 
 pub use api::{Api, Mention, MsgRef, Quote, Thread};
 pub use error::Error;

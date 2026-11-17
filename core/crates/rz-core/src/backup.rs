@@ -269,6 +269,61 @@ impl Core {
         Ok(json!({"done": done, "failed": failed, "total": total}))
     }
 
+    /// «Lưu vào Telegram»: gửi một tin vào chat với bot sao lưu (như kho lưu trên mây) — tin chữ / vị trí / danh thiếp gửi thành
+    /// tin nhắn; ảnh / video / tệp / thoại gửi nguyên tệp gốc (tài liệu), tệp > 19 MB chia phần.
+    pub(crate) async fn tg_save(&self, thread: &str, id: &str) -> R<Value> {
+        let c = self.backup_cfg();
+        if c.token.is_empty() || c.chat_id == 0 {
+            return Err(CoreError::new("NO_BOT", "Chưa nối bot Telegram — vào Thêm → Sao lưu (Telegram) để nối bot"));
+        }
+        let dto = self.store.lock().unwrap().dto(thread, id).ok_or_else(|| CoreError::new("NOT_FOUND", "Không tìm thấy tin"))?;
+        let head = {
+            let st = self.store.lock().unwrap();
+            let chat = s(&st.thread(thread), "name");
+            let sender = if dto.get("out").and_then(Value::as_bool) == Some(true) {
+                "Bạn".to_string()
+            } else {
+                let n0 = s(&dto, "name");
+                if n0.is_empty() { st.user_brief(&s(&dto, "from")).0 } else { n0 }
+            };
+            let who = if sender.is_empty() || sender == chat { String::new() } else { format!(" · {sender}") };
+            format!("Roza · {chat}{who} · {}", vn_time(n(&dto, "ts")))
+        };
+        let text = s(&dto, "text");
+        let http = client()?;
+        let entry = media_entries(&dto).into_iter().next();
+        match entry {
+            Some(e) => {
+                let data = match &e.local {
+                    Some(p) => std::fs::read(p).map_err(|x| CoreError::new("IO", x.to_string()))?,
+                    None => {
+                        let zh = self.http()?;
+                        let p = self.media.fetch_ext(&zh, &e.src, e.kind, &e.hint).await?;
+                        std::fs::read(p).map_err(|x| CoreError::new("IO", x.to_string()))?
+                    }
+                };
+                let caption: String = if text.is_empty() || text.starts_with('[') { head.clone() } else { format!("{head}
+{text}") };
+                let caption: String = caption.chars().take(1000).collect();
+                let n_parts = data.len().div_ceil(PART).max(1);
+                for (i, chunk) in data.chunks(PART).enumerate() {
+                    let name = if n_parts == 1 { e.name.clone() } else { format!("{}.phan{}of{}", e.name, i + 1, n_parts) };
+                    tg_send_document(&http, &c.token, c.chat_id, &name, if i == 0 { &caption } else { "" }, chunk).await?;
+                    if n_parts > 1 {
+                        tokio::time::sleep(Duration::from_millis(1100)).await;
+                    }
+                }
+            }
+            None => {
+                let body: String = format!("{head}
+
+{text}").chars().take(4000).collect();
+                tg(&http, &c.token, "sendMessage", json!({"chat_id": c.chat_id, "text": body})).await?;
+            }
+        }
+        Ok(json!({"chat": c.chat_title, "bot": c.bot}))
+    }
+
     /// Thử khôi phục: lấy từ Telegram tệp chép gần nhất (không đụng tin nhắn), báo cỡ + tệp đầu có đúng định dạng không.
     pub(crate) async fn backup_test_fetch(&self) -> R<Value> {
         let (url, kind) = self.store.lock().unwrap().media_bk_last().ok_or_else(|| CoreError::new("NOT_FOUND", "Chưa chép tệp nào"))?;
@@ -457,5 +512,35 @@ impl Core {
         if let Err(e) = Box::pin(self.backup_run()).await {
             self.log(&format!("tự sao lưu lỗi: {} {}", e.code, e.msg));
         }
+    }
+}
+
+/// Giờ Việt Nam (UTC+7) «dd/mm/yyyy HH:MM» từ ms.
+fn vn_time(ms: i64) -> String {
+    if ms <= 0 {
+        return String::new();
+    }
+    let secs = ms / 1000 + 7 * 3600;
+    let (days, rem) = (secs.div_euclid(86400), secs.rem_euclid(86400));
+    // ngày dân dụng từ số ngày kể từ 1970-01-01 (thuật toán của Howard Hinnant)
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let doe = z - era * 146_097;
+    let yoe = (doe - doe / 1460 + doe / 36_524 - doe / 146_096) / 365;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = doy - (153 * mp + 2) / 5 + 1;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 };
+    let y = yoe + era * 400 + if m <= 2 { 1 } else { 0 };
+    format!("{d:02}/{m:02}/{y} {:02}:{:02}", rem / 3600, rem % 3600 / 60)
+}
+
+#[cfg(test)]
+mod time_tests {
+    #[test]
+    fn vn_time() {
+        // 2026-11-17 08:30 UTC = 15:30 giờ Việt Nam
+        assert_eq!(super::vn_time(1_794_904_200_000), "17/11/2026 15:30");
+        assert_eq!(super::vn_time(0), "");
     }
 }

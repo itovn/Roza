@@ -4,6 +4,7 @@
 #import "RZSyncViewController.h"
 #import "RZNotifySettingsViewController.h"
 #import "RZHiddenListViewController.h"
+#import "RZExtras.h"
 #import "RZCore.h"
 #import "RZImages.h"
 #import "RZKit.h"
@@ -86,7 +87,7 @@
 }
 
 - (NSInteger)tableView:(UITableView *)tv numberOfRowsInSection:(NSInteger)s {
-    return s == 1 ? 4 : (s == 2 ? 4 : 1);
+    return s == 1 ? 4 : (s == 2 ? 5 : 1);
 }
 
 - (CGFloat)tableView:(UITableView *)tv heightForRowAtIndexPath:(NSIndexPath *)ip {
@@ -156,7 +157,7 @@
             c.accessoryView = sw;
         }
     } else if (ip.section == 2) {
-        NSArray *names = @[@"Đồng bộ tin nhắn", @"Sao lưu (Telegram)", @"Trò chuyện ẩn", @"Giới thiệu Roza"];
+        NSArray *names = @[@"Đồng bộ tin nhắn", @"Sao lưu (Telegram)", @"Trò chuyện ẩn", @"Tin nhắn nhanh", @"Giới thiệu Roza"];
         c.textLabel.text = [names objectAtIndex:ip.row];
         c.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
     } else {
@@ -199,6 +200,8 @@
         [self.navigationController pushViewController:[[RZBackupViewController alloc] init] animated:YES];
     } else if (ip.section == 2 && ip.row == 2) {
         RZOpenHidden(self.navigationController);
+    } else if (ip.section == 2 && ip.row == 3) {
+        [self.navigationController pushViewController:[[RZQuickMessagesViewController alloc] init] animated:YES];
     } else if (ip.section == 2) {
         RZAlert(@"Roza",
                 @"Ứng dụng nhắn tin Zalo không chính thức cho iPhone / iPad iOS 5 – 6.\n\nLõi Rust nói chuyện thẳng với máy chủ Zalo "

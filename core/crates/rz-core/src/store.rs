@@ -73,12 +73,24 @@ fn e(x: rusqlite::Error) -> String {
     format!("SQLite: {x}")
 }
 
+/// Cột thêm sau (CSDL cũ / bản sao lưu cũ). Lỗi «duplicate column» khi đã có thì bỏ qua.
+fn migrate(db: &Connection) {
+    // trò chuyện ẩn của Zalo (có PIN, đồng bộ với điện thoại)
+    let _ = db.execute("ALTER TABLE threads ADD COLUMN secret INTEGER NOT NULL DEFAULT 0", []);
+    // tên gợi nhớ mình đặt cho người khác (đồng bộ với Zalo trên điện thoại)
+    let _ = db.execute("ALTER TABLE users ADD COLUMN alias TEXT NOT NULL DEFAULT ''", []);
+}
+
+/// Tên hiện: tên gợi nhớ > tên hiển thị > tên Zalo.
+fn pick_name(alias: &str, name: &str, zname: &str) -> String {
+    [alias, name, zname].into_iter().find(|x| !x.trim().is_empty()).unwrap_or("").to_string()
+}
+
 impl Store {
     pub fn open(path: &Path) -> Res<Self> {
         let db = Connection::open(path).map_err(e)?;
         db.execute_batch(SCHEMA).map_err(e)?;
-        // Cột thêm sau (CSDL cũ / bản sao lưu cũ): trò chuyện ẩn của Zalo (có PIN, đồng bộ với điện thoại)
-        let _ = db.execute("ALTER TABLE threads ADD COLUMN secret INTEGER NOT NULL DEFAULT 0", []);
+        migrate(&db);
         Ok(Self { db })
     }
 
@@ -86,7 +98,7 @@ impl Store {
     pub fn memory() -> Res<Self> {
         let db = Connection::open_in_memory().map_err(e)?;
         db.execute_batch(SCHEMA).map_err(e)?;
-        let _ = db.execute("ALTER TABLE threads ADD COLUMN secret INTEGER NOT NULL DEFAULT 0", []);
+        migrate(&db);
         Ok(Self { db })
     }
 
@@ -200,6 +212,41 @@ impl Store {
     }
 
     /// Ghi lại DTO của một tin (cảm xúc…).
+    /// Đọc lại (từ `raw`) các tin đã lưu bằng cách đọc của bản cũ — loại tin mới nhận ra sau này: danh thiếp, thẻ ngân hàng,
+    /// nhắc hẹn, dòng thông báo. Giữ cảm xúc / trạng thái đã có. Trả số tin đã đổi.
+    pub fn renormalize(&mut self, me: &str) -> usize {
+        let rows: Vec<(String, String, String, String)> = {
+            let mut st = match self.db.prepare(
+                "SELECT thread, id, raw, dto FROM msgs WHERE raw IS NOT NULL AND
+                 json_extract(raw, '$.msgType') IN ('chat.recommended', 'chat.webcontent', 'chat.ecard', 'webchat')
+                 AND (json_extract(raw, '$.msgType') != 'webchat' OR json_type(raw, '$.content') = 'object')",
+            ) {
+                Ok(s) => s,
+                Err(_) => return 0,
+            };
+            st.query_map([], |r| Ok((r.get(0)?, r.get(1)?, r.get(2)?, r.get(3)?)))
+                .map(|it| it.filter_map(|x| x.ok()).collect())
+                .unwrap_or_default()
+        };
+        let mut changed = 0;
+        for (thread, id, raw, dto) in rows {
+            let (Ok(raw), Ok(old)) = (serde_json::from_str::<Value>(&raw), serde_json::from_str::<Value>(&dto)) else { continue };
+            let Some(n) = msg::normalize(&raw, me, thread.starts_with('g')) else { continue };
+            if n.dto.is_null() || (n.dto["kind"] == old["kind"] && n.dto["media"] == old["media"] && n.dto["text"] == old["text"]) {
+                continue;
+            }
+            let mut d = n.dto;
+            for k in ["reacts", "status", "seen", "quote", "name"] {
+                if let Some(v) = old.get(k).filter(|v| !v.is_null()) {
+                    d[k] = v.clone();
+                }
+            }
+            self.update_dto(&thread, &id, &d);
+            changed += 1;
+        }
+        changed
+    }
+
     pub fn update_dto(&mut self, thread: &str, id: &str, dto: &Value) {
         let _ = self.db.execute("UPDATE msgs SET dto = ?3 WHERE thread = ?1 AND id = ?2", params![thread, id, dto.to_string()]);
     }
@@ -315,7 +362,11 @@ impl Store {
         if !avatar.is_empty() {
             v["avatar"] = json!(avatar);
         }
-        if v.get("name").and_then(Value::as_str).map_or(true, str::is_empty) && !name.is_empty() {
+        // Tên gợi nhớ (mình đặt) thay tên người gửi tự đặt, như app Zalo
+        let alias = self.alias(&from);
+        if !alias.is_empty() {
+            v["name"] = json!(alias);
+        } else if v.get("name").and_then(Value::as_str).map_or(true, str::is_empty) && !name.is_empty() {
             v["name"] = json!(name);
         }
     }
@@ -542,6 +593,39 @@ impl Store {
         );
     }
 
+    /// Tên gợi nhớ mình đặt cho `uid` ("" nếu chưa đặt).
+    pub fn alias(&self, uid: &str) -> String {
+        self.db.query_row("SELECT alias FROM users WHERE uid = ?1", [uid], |r| r.get::<_, String>(0)).optional().ok().flatten().unwrap_or_default()
+    }
+
+    /// Đặt / bỏ (alias rỗng) tên gợi nhớ của một người.
+    pub fn set_alias(&mut self, uid: &str, alias: &str) {
+        let _ = self.db.execute(
+            "INSERT INTO users(uid, alias) VALUES(?1, ?2) ON CONFLICT(uid) DO UPDATE SET alias = excluded.alias",
+            params![uid, alias.trim()],
+        );
+    }
+
+    /// Thay toàn bộ tên gợi nhớ bằng danh sách từ máy chủ (đồng bộ với Zalo trên điện thoại).
+    pub fn set_aliases(&mut self, items: &[(String, String)]) {
+        let _ = self.db.execute("UPDATE users SET alias = '' WHERE alias != ''", []);
+        for (uid, alias) in items {
+            self.set_alias(uid, alias);
+        }
+    }
+
+    /// Người 1-1 có cuộc trò chuyện mà chưa có thông tin (vd. mình nhắn trước cho người lạ) — cần hỏi getUserInfo.
+    pub fn thread_users_missing(&self) -> Vec<String> {
+        let mut st = match self.db.prepare(
+            "SELECT substr(t.key, 2) FROM threads t LEFT JOIN users u ON u.uid = substr(t.key, 2)
+             WHERE t.key LIKE 'u%' AND (u.uid IS NULL OR (u.name = '' AND u.zname = '') OR u.avatar = '')",
+        ) {
+            Ok(s) => s,
+            Err(_) => return vec![],
+        };
+        st.query_map([], |r| r.get::<_, String>(0)).map(|it| it.filter_map(|x| x.ok()).collect()).unwrap_or_default()
+    }
+
     /// Ghi tên tạm (từ dName của tin) cho người chưa có.
     pub fn hint_user_name(&mut self, uid: &str, name: &str) {
         if uid.is_empty() || name.is_empty() {
@@ -556,10 +640,11 @@ impl Store {
 
     pub fn user_brief(&self, uid: &str) -> (String, String) {
         self.db
-            .query_row("SELECT name, zname, avatar FROM users WHERE uid = ?1", [uid], |r| {
+            .query_row("SELECT name, zname, avatar, alias FROM users WHERE uid = ?1", [uid], |r| {
                 let n: String = r.get(0)?;
                 let z: String = r.get(1)?;
-                Ok((if n.is_empty() { z } else { n }, r.get::<_, String>(2)?))
+                let a: String = r.get(3)?;
+                Ok((pick_name(&a, &n, &z), r.get::<_, String>(2)?))
             })
             .optional()
             .ok()
@@ -569,12 +654,16 @@ impl Store {
 
     pub fn user(&self, uid: &str) -> Option<Value> {
         self.db
-            .query_row("SELECT name, zname, avatar, phone, friend, json FROM users WHERE uid = ?1", [uid], |r| {
+            .query_row("SELECT name, zname, avatar, phone, friend, json, alias FROM users WHERE uid = ?1", [uid], |r| {
                 let mut v: Value = r.get::<_, Option<String>>(5)?.and_then(|s| serde_json::from_str(&s).ok()).unwrap_or(json!({}));
                 let n: String = r.get(0)?;
                 let z: String = r.get(1)?;
+                let a: String = r.get(6)?;
                 v["uid"] = json!(uid);
-                v["name"] = json!(if n.is_empty() { z.clone() } else { n });
+                v["name"] = json!(pick_name(&a, &n, &z));
+                v["alias"] = json!(a);
+                // tên thật (không tính tên gợi nhớ) — để hiện «Tên Zalo: …» khi đã đặt tên gợi nhớ
+                v["real_name"] = json!(if n.is_empty() { z.clone() } else { n });
                 v["zname"] = json!(z);
                 v["avatar"] = json!(r.get::<_, String>(2)?);
                 v["phone"] = json!(r.get::<_, String>(3)?);
@@ -592,14 +681,15 @@ impl Store {
     }
 
     pub fn friends(&self) -> Vec<Value> {
-        let mut st = match self.db.prepare("SELECT uid, name, zname, avatar FROM users WHERE friend = 1 ORDER BY name COLLATE NOCASE") {
+        let mut st = match self.db.prepare("SELECT uid, name, zname, avatar, alias FROM users WHERE friend = 1 ORDER BY name COLLATE NOCASE") {
             Ok(s) => s,
             Err(_) => return vec![],
         };
         st.query_map([], |r| {
             let n: String = r.get(1)?;
             let z: String = r.get(2)?;
-            Ok(json!({"uid": r.get::<_, String>(0)?, "name": if n.is_empty() { z } else { n }, "avatar": r.get::<_, String>(3)?}))
+            let a: String = r.get(4)?;
+            Ok(json!({"uid": r.get::<_, String>(0)?, "name": pick_name(&a, &n, &z), "avatar": r.get::<_, String>(3)?}))
         })
         .map(|it| it.filter_map(|x| x.ok()).collect())
         .unwrap_or_default()

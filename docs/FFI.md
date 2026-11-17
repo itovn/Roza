@@ -74,6 +74,18 @@ media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], react
 | `hidden.setPin` | `pin` (4 số) | `{}` — đặt PIN mới (lưu lên máy chủ, MD5) |
 | `hidden.set` | `thread`, `hidden` | `{hidden}` — ẩn / bỏ ẩn (cần PIN trước, lỗi `NO_PIN`) |
 | `hidden.sync` | — | `{}` — đọc lại danh sách ẩn + PIN từ máy chủ |
+| `alias.set` | `uid`, `alias` (rỗng = bỏ) | `User` — tên gợi nhớ (cả người chưa kết bạn), đồng bộ với điện thoại |
+| `user.info` | `uid` | `{uid, name, alias, real_name, zname, avatar, phone, friend}` |
+| `card.send` | `thread`, `uid`, `phone`? | `{msgId}` — gửi danh thiếp |
+| `bank.list` | — | `[{bin, name, full, logo, key}]` ngân hàng (giữ 7 ngày) |
+| `bank.accounts` / `bank.addAccount` / `bank.removeAccount` | — / `bin, number, holder` / `id, default` | `[{id, bin, number, holder, default, bank}]` tài khoản đã lưu trong Zalo |
+| `bank.sendCard` | `thread`, `bin`, `number`, `holder` | `{}` — thẻ tài khoản (Zalo hiện thẻ có VietQR) |
+| `bank.resolve` | `thread`, `id` | `Msg` — đọc thẻ tài khoản trong chat (tải mẫu zinstant) → `media.{bin, number, holder, bank}` |
+| `vietqr.make` | `bin`, `number`, `amount`?, `note`? | `{payload, size, bits}` — mã VietQR (app tự vẽ) |
+| `reminders.list` / `reminders.save` / `reminders.remove` | `thread` / `thread, id?, title, emoji?, ts, repeat` / `thread, id` | `[{id, title, emoji, ts, repeat, creator}]` |
+| `quick.list` / `quick.save` / `quick.remove` | `refresh`? / `id?, keyword, text` / `id` | `[{id, keyword, text}]` tin nhắn nhanh |
+| `tg.save` | `thread`, `id` | `{chat, bot}` — lưu tin vào chat với bot sao lưu (lỗi `NO_BOT`) |
+| `map.tile` / `map.address` | `z, x, y` / `lat, lng` | `{path}` ô OpenStreetMap / `{address}` (Nominatim) |
 | `contacts.list` / `contacts.refresh` | — | `[{uid, name, avatar}]` |
 | `contacts.find` | `phone` | `{uid, name, zname, avatar}` |
 | `groups.list` / `groups.refresh` | — | `[{gid, name, avatar, members, ts}]` |
