@@ -58,4 +58,4 @@ Còn mở: bố cục riêng cho iPad (UISplitViewController); lịch sử nhóm
 ## 17/11/2026 (khuya, tiếp) — Bảy tính năng mới, tên gợi nhớ, sửa tên người lạ
 
 - Nhắc hẹn, vị trí (bản đồ OSM), tin nhắn nhanh (gõ «/»), mã QR chuyển khoản (VietQR), gửi tài khoản ngân hàng, danh thiếp, lưu vào
-  Telegram; tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo khi đang kết nối (D21). Phát hành bản 1.2.0.
+  Telegram; tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo khi đang kết nối (D21). Phát hành bản 1.2.0 (GitHub Release + nguồn Cydia, trang giới thiệu có mục «Nhắc hẹn, vị trí, chuyển khoản…»). Phát hành bản 1.2.0.
