@@ -17,3 +17,22 @@ Name: Roza
 Depiction: https://itovn.github.io/Roza/cydia/depiction.html
 Homepage: https://itovn.github.io/Roza/
 
+Package: vn.roza.app
+Version: 1.1.0
+Architecture: iphoneos-arm
+Maintainer: Roza
+Installed-Size: 5684
+Depends: firmware (>= 5.0), mobilesubstrate
+Filename: debs/vn.roza.app_1.1.0_iphoneos-arm.deb
+Size: 3255816
+MD5sum: 1bf8f8f78c0a0a2d7d126bd85bf72eb6
+SHA1: bb5a277906317065079d02852bacde293ec5398d
+SHA256: 34ff68006eee2c78f990e254fc6831ee1065ade6744443d93b0c9b08aa828b36
+Section: Social
+Description: Nhắn tin Zalo trên iPhone / iPad iOS 5 / iOS 6 (ứng dụng không chính thức, đăng nhập như Zalo Web).
+Author: Roza
+Icon: file:///Applications/Roza.app/Icon@2x.png
+Name: Roza
+Depiction: https://itovn.github.io/Roza/cydia/depiction.html
+Homepage: https://itovn.github.io/Roza/
+

@@ -103,7 +103,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <img src="img/icon.png" alt="Biểu tượng Roza">
     <h1>Roza</h1>
     <p>Nhắn tin <b>Zalo</b> trên iPhone / iPad chạy <b>iOS 5</b> và <b>iOS 6</b> đã jailbreak — giao diện iOS 6, nhẹ, lõi Rust.</p>
-    <span class="ver">Bản 1.0.0</span>
+    <span class="ver">Bản 1.1.0</span>
   </div>
 
   <a class="btn rose" href="cydia://url/https://cydia.saurik.com/api/share#?source=https://itovn.github.io/Roza/cydia/">Thêm nguồn vào Cydia</a>
@@ -129,6 +129,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row"><div class="ic c4"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M8.5 21.5a4.5 4.5 0 0 1-.4-9A6.5 6.5 0 0 1 20.6 11a4.6 4.6 0 0 1 .4 10.5z" fill="#fff"/><path d="M14.5 19.5v-6.5m-3 3l3-3 3 3" fill="none" stroke="#1d8ea3" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><b>Sao lưu lên Telegram</b><span>Sao lưu tin nhắn (cả ảnh, video, tệp nếu muốn) vào chat với bot Telegram của riêng bạn; khôi phục trên máy mới. Không gửi phiên đăng nhập Zalo đi đâu.</span></div>
     <div class="row"><div class="ic c6"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M10 14v-2a4.5 4.5 0 0 1 9 0v2" fill="none" stroke="#fff" stroke-width="2.2"/><rect x="7.5" y="13.5" width="14" height="10" rx="2" fill="#fff"/></svg></div><b>Trò chuyện ẩn</b><span>Ẩn chat bằng mã PIN 4 số, dùng chung với app Zalo trên điện thoại; thông báo của chat ẩn không lộ tên và nội dung.</span></div>
     <div class="row"><div class="ic c8"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M18 7a8 8 0 1 0 4.5 13A6.5 6.5 0 0 1 18 7z" fill="#fff"/></svg></div><b>Chế độ tối</b><span>Giao diện iOS 6 sáng hoặc tối, đổi ngay trong thẻ Thêm.</span></div>
+    <div class="row"><div class="ic c4"><svg width="29" height="29" viewBox="0 0 29 29"><rect x="5" y="6" width="19" height="17" rx="2.2" fill="#fff"/><rect x="11.2" y="8" width="1.6" height="13" fill="#1d8ea3"/><rect x="7" y="9" width="3" height="1.6" fill="#1d8ea3"/><rect x="7" y="12" width="3" height="1.6" fill="#1d8ea3"/><rect x="7" y="15" width="3" height="1.6" fill="#1d8ea3"/></svg></div><b>iPad: màn chia đôi</b><span>Danh sách chat bên trái, cuộc trò chuyện bên phải — cả chiều dọc và ngang, như app Tin nhắn trên iPad.</span></div>
     <div class="row"><div class="ic c9"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M14.5 5.5L22 8.5c0 7.5-3 12.5-7.5 15C10 21 7 16 7 8.5z" fill="#fff"/></svg></div><b>Không qua máy chủ trung gian</b><span>Lõi Rust nói chuyện thẳng với máy chủ Zalo như Zalo Web; phiên đăng nhập và tin nhắn chỉ nằm trên máy của bạn. Mã nguồn mở.</span></div>
   </div>
 
@@ -150,7 +151,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row plain"><b>1. Thêm nguồn Cydia</b><span>Mở Cydia → <b style="display:inline">Nguồn</b> → Sửa → Thêm, nhập <code>https://itovn.github.io/Roza/cydia/</code> rồi «Thêm nguồn». Hoặc mở trang này bằng Safari trên máy và chạm nút «Thêm nguồn vào Cydia» ở trên.</span></div>
     <div class="row plain"><b>2. Cài Roza</b><span>Trong nguồn vừa thêm, chọn «Roza» → Cài đặt → Xác nhận. Cài xong bấm <b style="display:inline">Restart SpringBoard</b> — cần một lần để Roza có mục trong Cài đặt → Thông báo.</span></div>
     <div class="row plain"><b>3. Mở Roza và đăng nhập</b><span>Quét mã QR bằng app Zalo trên điện thoại khác (xem mục dưới). Lần đầu iOS hỏi quyền gửi thông báo: chọn «OK».</span></div>
-    <div class="row plain"><b>Cài bằng tệp .deb</b><span>Tải tệp ở <a href="https://github.com/itovn/Roza/releases/latest">trang Releases</a>, chép vào máy rồi cài bằng iFile, hoặc qua SSH: <code>dpkg -i vn.roza.app_1.0.0_iphoneos-arm.deb</code> rồi <code>killall SpringBoard</code>. Cần có gói MobileSubstrate.</span></div>
+    <div class="row plain"><b>Cài bằng tệp .deb</b><span>Tải tệp ở <a href="https://github.com/itovn/Roza/releases/latest">trang Releases</a>, chép vào máy rồi cài bằng iFile, hoặc qua SSH: <code>dpkg -i vn.roza.app_1.1.0_iphoneos-arm.deb</code> rồi <code>killall SpringBoard</code>. Cần có gói MobileSubstrate.</span></div>
     <div class="row plain"><b>Cập nhật</b><span>Bản mới phát hành qua nguồn Cydia: Cydia → Thay đổi → Làm mới → Nâng cấp.</span></div>
   </div>
 
@@ -235,7 +236,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row plain"><b>Roza có phải app của Zalo?</b><span>Không. Roza là ứng dụng không chính thức, đăng nhập và nhắn tin qua cùng giao thức với Zalo Web. Tên, biểu tượng, hình ảnh trong app đều tự vẽ. Dùng ứng dụng không chính thức là lựa chọn của bạn.</span></div>
     <div class="row plain"><b>Tin nhắn có đi qua máy chủ nào khác?</b><span>Không. Roza kết nối thẳng tới máy chủ Zalo; phiên đăng nhập và tin nhắn lưu trong máy (<code>/var/mobile/Library/Roza</code>). Chỉ khi bạn bật sao lưu thì dữ liệu mới được gửi tới bot Telegram của chính bạn.</span></div>
     <div class="row plain"><b>Gọi thoại / video được không?</b><span>Chưa. Roza 1.0 dành cho nhắn tin.</span></div>
-    <div class="row plain"><b>iPad dùng được không?</b><span>Được (iPad 1 – 4, iPad mini 1), chạy toàn màn hình với bố cục như trên iPhone.</span></div>
+    <div class="row plain"><b>iPad dùng được không?</b><span>Được (iPad 1 – 4, iPad mini 1). Từ bản 1.1.0 iPad có màn chia đôi: danh sách chat bên trái, cuộc trò chuyện bên phải, xoay dọc hay ngang đều được.</span></div>
     <div class="row plain"><b>Đăng xuất, gỡ cài đặt</b><span>Thêm → Đăng xuất: xoá phiên và tin nhắn đã lưu trên máy. Gỡ app: Cydia → Đã cài đặt → Roza → Sửa đổi → Gỡ bỏ.</span></div>
     <div class="row plain"><b>Báo lỗi, góp ý</b><span><a href="https://github.com/itovn/Roza/issues">GitHub Issues</a> hoặc nhóm Telegram <a href="https://t.me/tivikit">t.me/tivikit</a>. Khi báo lỗi, ghi rõ máy, bản iOS và cách làm để gặp lỗi.</span></div>
   </div>
