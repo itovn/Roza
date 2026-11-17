@@ -27,9 +27,11 @@ void rz_call(const char *request_json, rz_cb on_result, void *ctx);
 **Msg**: `{id, cid, thread, from, out, ts (ms), type (msgType của Zalo), kind, text, name (tên người gửi), avatar? (nhóm),
 media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], reacts?: {uid: icon}, status?: sending|sent|failed}`
 
-`kind`: `text`, `photo` (`media: {url, normal, thumb, w, h}`), `gif`, `sticker` (`{id, cat, type}`), `voice` (`{url, dur}`),
-`video` (`{url, thumb, dur, w, h}`), `file` (`{name, url, size, ext}`), `link` (`{url, title, desc, thumb}`), `contact`,
-`location`, `poll`, `system`, `recall`, `other`. Tin mình gửi chưa có msgId: `id = "l<cid>"`.
+`kind`: `text`, `photo` (`media: {url, normal, thumb, w, h}`), `gif` (`{url, thumb, w, h}`), `sticker` (`{id, cat, type}`),
+`voice` (`{url, dur}`), `video` (`{url, thumb, dur, w, h}`), `file` (`{name, url, size, ext}`), `link` (`{url, title, desc,
+thumb}`), `contact` (danh thiếp: `{uid, name, avatar, phone}`), `location` (`{lat, lng, title}`), `bank` (thẻ tài khoản ngân hàng:
+`{data_url, pc_url}`, sau `bank.resolve` thêm `{bin, number, holder, bank, payload}`), `reminder` (`{id, ts, title, emoji, repeat,
+when}`), `poll`, `system`, `recall`, `other`. Tin mình gửi chưa có msgId: `id = "l<cid>"`.
 
 ## Lệnh
 
@@ -41,6 +43,7 @@ media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], react
 | `auth.logout` | — | `{}` — xoá phiên, kho tin, bộ đệm |
 | `net.state` | — | `{state: idle\|connecting\|online\|offline\|duplicate}` |
 | `net.reconnect` | — | `{}` — nối lại ngay (cả khi đang `duplicate` = «Dùng ở đây») |
+| `net.check` | — | `{state}` — iOS vừa đánh thức app (socket VoIP có dữ liệu / hẹn giữ kết nối 10 phút): ping ngay; chưa có kết nối thì nối lại |
 | `threads.list` | `limit` (300) | `[Thread]` |
 | `threads.get` | `thread` | `Thread` |
 | `threads.hide` | `thread` | `{}` — ẩn khỏi danh sách (tin mới thì hiện lại) |
@@ -75,7 +78,7 @@ media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], react
 | `hidden.set` | `thread`, `hidden` | `{hidden}` — ẩn / bỏ ẩn (cần PIN trước, lỗi `NO_PIN`) |
 | `hidden.sync` | — | `{}` — đọc lại danh sách ẩn + PIN từ máy chủ |
 | `alias.set` | `uid`, `alias` (rỗng = bỏ) | `User` — tên gợi nhớ (cả người chưa kết bạn), đồng bộ với điện thoại |
-| `user.info` | `uid` | `{uid, name, alias, real_name, zname, avatar, phone, friend}` |
+| `user.info` | `uid` | `{uid, name, alias, real_name, zname, avatar, phone, friend, …}` — hỏi máy chủ rồi đọc từ kho; `name` = tên gợi nhớ > tên hiển thị > tên Zalo |
 | `card.send` | `thread`, `uid`, `phone`? | `{msgId}` — gửi danh thiếp |
 | `bank.list` | — | `[{bin, name, full, logo, key}]` ngân hàng (giữ 7 ngày) |
 | `bank.accounts` / `bank.addAccount` / `bank.removeAccount` | — / `bin, number, holder` / `id, default` | `[{id, bin, number, holder, default, bank}]` tài khoản đã lưu trong Zalo |
@@ -89,7 +92,6 @@ media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], react
 | `contacts.list` / `contacts.refresh` | — | `[{uid, name, avatar}]` |
 | `contacts.find` | `phone` | `{uid, name, zname, avatar}` |
 | `groups.list` / `groups.refresh` | — | `[{gid, name, avatar, members, ts}]` |
-| `user.info` | `uid` | `{uid, name, zname, avatar, phone, friend, …}` |
 | `user.lastOnline` | `uid` | `{last (giây), show}` |
 | `group.info` | `gid` | `{gid, name, avatar, members, desc, creator, admins, member_ids}` |
 | `media.fetch` | `url`, `kind`: avatar\|thumb\|photo\|sticker\|voice\|file, `ext`? (đuôi gợi ý) | `{path}` — tải qua lõi (TLS của lõi), WebP → PNG |
@@ -104,6 +106,10 @@ media?, quote?: {from, name, text, id, cid}, mentions?: [{uid, pos, len}], react
 | `auth.state` | như lệnh `auth.state` |
 | `auth.qr` | `{state: generated (path) \| scanned (name, avatar) \| expired \| declined \| done \| error (code, msg)}` |
 | `net.state` | `{state}` |
+| `net.socket` | `{fd}` — socket WebSocket vừa mở; app gắn nó làm socket VoIP (`RZBackground`) để iOS đánh thức khi có tin |
+| `sync.done` | `{group, msgs, fresh}` — xong một đợt tin cũ máy chủ gửi khi mở WebSocket (cmd 510 / 511) |
+| `sync.progress` | `{done, total, msgs}` — đang tải lịch sử nhóm (`sync.groups`) |
+| `backup.progress` | `{done, total}` — đang sao lưu tệp trong chat (`backup.media`) |
 | `threads.changed` | — (tải lại danh sách) |
 | `threads.upsert` | `{threads: [Thread]}` |
 | `contacts.changed` | — |

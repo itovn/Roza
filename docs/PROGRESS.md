@@ -3,6 +3,7 @@
 ## 17/11/2026 — Khởi tạo, bản 0.1.0 dựng được
 
 **Lõi Rust**
+
 - `rz-zalo` (chuyển từ zca-js 2.3.0, commit `1e1c503`): mã hoá (khớp từng byte với bản JS — `tools/zca-vectors.mjs`), cookie,
   HTTP, đăng nhập QR + cookie, đọc apiVersion từ chat.zalo.me, ~25 lệnh API, WebSocket. 10 phép thử.
 - `rz-core`: phiên, vòng kết nối tự nối lại, đồng bộ tin cũ, kho SQLite, tin tạm → thật, thu hồi, cảm xúc, đã xem, tải ảnh qua
@@ -47,7 +48,7 @@ thử trên iPad mini 1 / iPad 1; commit git.
 
 - Trò chuyện ẩn kiểu Zalo, PIN đồng bộ với điện thoại (D18).
 - iPad mini 1 / iPad 1: chạy, giao diện iPhone phóng to (D19).
-- Bản phát hành 1.0.0, nguồn Cydia https://itovn.github.io/Roza/cydia/, mã nguồn https://github.com/itovn/Roza (D19).
+- Bản phát hành 1.0.0, nguồn Cydia <https://itovn.github.io/Roza/cydia/>, mã nguồn <https://github.com/itovn/Roza> (D19).
 
 Còn mở: bố cục riêng cho iPad (UISplitViewController); lịch sử nhóm bị `isFiltered`; Google Drive (sao lưu).
 
@@ -58,4 +59,21 @@ Còn mở: bố cục riêng cho iPad (UISplitViewController); lịch sử nhóm
 ## 17/11/2026 (khuya, tiếp) — Bảy tính năng mới, tên gợi nhớ, sửa tên người lạ
 
 - Nhắc hẹn, vị trí (bản đồ OSM), tin nhắn nhanh (gõ «/»), mã QR chuyển khoản (VietQR), gửi tài khoản ngân hàng, danh thiếp, lưu vào
-  Telegram; tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo khi đang kết nối (D21). Phát hành bản 1.2.0 (GitHub Release + nguồn Cydia, trang giới thiệu có mục «Nhắc hẹn, vị trí, chuyển khoản…»). Phát hành bản 1.2.0.
+  Telegram; tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo khi đang kết nối (D21).
+- Phát hành bản 1.2.0: GitHub Release + nguồn Cydia (giữ 1.0.0 / 1.1.0 / 1.2.0), trang giới thiệu có mục «Nhắc hẹn, vị trí,
+  chuyển khoản…». `cbsymcheck` bản phát hành 428 / 428 trên iPhone 5, iPad mini 1, iPad 1; cài và mở được trên hai iPad.
+
+## 17/11/2026 (khuya, sau 1.2.0) — Mô tả gói không dấu, cập nhật tài liệu
+
+- Cydia trên iOS 5 / 6 hiện chữ có dấu trong mô tả gói thành «?» → `app/control` viết không dấu; tệp `Packages` của nguồn Cydia
+  sửa cho cả ba bản (gh-pages `8296699`). `tools/update-cydia-repo.sh` lấy mô tả từ `app/control` cho mọi bản và dừng nếu
+  `Packages` còn ký tự ngoài ASCII — chạy thử trên máy dựng: dựng lại ra đúng `Packages` đang chạy (cùng MD5) (D22).
+- Tài liệu theo bản 1.2.0: THIET-KE (kiến trúc, màn hình, các bản đã phát hành), FFI (`net.check`, sự kiện `net.socket` /
+  `sync.*` / `backup.progress`, loại tin `bank` / `reminder`), README.
+
+Còn mở:
+
+- Chưa thử trên máy: đặt tên gợi nhớ thật (sẽ đổi dữ liệu tài khoản của anh), gửi vị trí trọn một vòng, bố cục các màn mới trên
+  iPhone (320 điểm).
+- Lịch sử một số nhóm bị máy chủ lọc (`isFiltered`); sao lưu Google Drive.
+- Chưa làm: thông tin nhóm (thành viên), tắt thông báo / ghim từ app, tìm tin trong chat, tạo nhóm, lời mời kết bạn, khoá app.

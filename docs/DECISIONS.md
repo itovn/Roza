@@ -179,8 +179,8 @@ Thiết kế đầy đủ: [THIET-KE.md](THIET-KE.md).
   đăng xuất, đăng xuất sẽ huỷ luôn phiên của iPhone). Chụp ảnh trên máy phụ: tạm chặn `wpa.chat.zalo.me` trong `/etc/hosts`.
 - Bản phát hành `FINALPACKAGE=1`: không có `Debug/` (không còn lớp RZDebug, không đọc `Roza-cmd.txt`), `.deb` 3,2 MB; `cbsymcheck`
   412 / 412 trên iPad 1 iOS 5.1.1 và iPad mini 1 iOS 6.1.3; mở được trên iPad 1.
-- Trang giới thiệu + nguồn Cydia trên nhánh `gh-pages` của itovn/Roza (giống GramMini): https://itovn.github.io/Roza/ và
-  https://itovn.github.io/Roza/cydia/ (`tools/update-cydia-repo.sh`). Đường dẫn GitHub Pages phân biệt hoa thường → tên repo là
+- Trang giới thiệu + nguồn Cydia trên nhánh `gh-pages` của itovn/Roza (giống GramMini): <https://itovn.github.io/Roza/> và
+  <https://itovn.github.io/Roza/cydia/> (`tools/update-cydia-repo.sh`). Đường dẫn GitHub Pages phân biệt hoa thường → tên repo là
   «Roza» (github.com/itovn/roza vẫn mở được).
 - Ảnh trên trang: không lộ tên, số điện thoại, bạn bè, nhóm; mã QR làm mờ; xoá nút AssistiveTouch khỏi ảnh chụp.
 
@@ -231,3 +231,15 @@ Thiết kế đầy đủ: [THIET-KE.md](THIET-KE.md).
   lúc «đang kết nối» (nhật ký iPhone kẹt từ 16:13). Sửa: mở ở nền thì xin thời gian chạy nền + giữ kết nối ngay.
 - Thử trên iPad mini 1 (phiên chép từ iPhone, iPhone tạm bị ngắt): bong bóng 4 loại mới, thẻ ngân hàng tự đọc, màn mã QR, gửi mã QR
   chuyển khoản (ảnh + chữ), gợi ý «/», nhắc hẹn, bản đồ OSM, tra địa chỉ, lưu Telegram (chữ + ảnh). `cbsymcheck` 432 / 432.
+
+## D22. Mô tả gói (Cydia) viết không dấu — 17/11/2026
+
+- Cydia 1.1.30 trên iOS 5 / 6 hiện chữ có dấu trong trường `Description` của gói thành «?»: Cydia đọc mô tả qua apt, apt đổi sang
+  bảng mã của máy (US-ASCII — iOS không có locale UTF-8), ký tự không đổi được thành «?». Tên gói (`Name`) đọc thẳng nên không bị.
+- `app/control` viết không dấu từ sau bản 1.2.0 (`cf0d736`). Tệp `Packages` của nguồn Cydia sửa tay cho 1.0.0 – 1.2.0 (gh-pages
+  `8296699`); bản thân các `.deb` đó vẫn mang mô tả có dấu bên trong.
+- `tools/update-cydia-repo.sh` dựng lại `Packages` từ các `.deb` → lần phát hành sau sẽ đưa mô tả có dấu của bản cũ quay lại.
+  Sửa: script lấy `Description` của `app/control` cho mọi bản, dừng nếu `app/control` hay `Packages` còn ký tự ngoài ASCII;
+  `Description` trong `Release` cũng viết không dấu. Thử trên máy dựng (bản sao kho Cydia): `Packages` dựng lại trùng MD5 với bản
+  đang chạy; `control` có dấu → script dừng.
+- Trang mô tả (`depiction.html`) và trang giới thiệu là HTML (Cydia mở trong WebView, Safari) → giữ tiếng Việt có dấu.
