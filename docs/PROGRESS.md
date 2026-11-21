@@ -82,3 +82,6 @@ Còn mở:
 
 - iPhone 5 vào safe mode vì một thông báo có nửa emoji (do GramMini cắt xem trước 180 đơn vị UTF-16). Roza có cùng dòng cắt chữ →
   sửa bằng `RZCut()` / `RZValidUTF16()` cho thông báo tin mới, nhắc hẹn, nhãn tin nhắn nhanh (D23). Phát hành 1.2.1.
+- Phát hành 1.2.1: GitHub Release + nguồn Cydia (giữ 1.1.0 / 1.2.0 / 1.2.1), trang mô tả + trang giới thiệu. `cbsymcheck` bản
+  phát hành 428 / 428 trên iPhone 5 (iOS 6.1.4) và iPad 1 (iOS 5.1.1); cài lên iPad 1 — mở được. Tải lại: GitHub = Cydia (cùng
+  SHA-256 `84cd40e6857f9e537226deb4308302c26dd93393d4019ad688ed7e30f688177c`).
