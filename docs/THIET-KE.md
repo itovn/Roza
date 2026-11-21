@@ -129,6 +129,7 @@ hằng căn lề bằng số (`RZAlignCenter`…).
 - **1.1.0**: giao diện iPad chia đôi (D20).
 - **1.2.0**: nhắc hẹn, vị trí (bản đồ OSM), tin nhắn nhanh, danh thiếp, tài khoản ngân hàng + mã QR chuyển khoản (VietQR), lưu tin
   vào Telegram, tên gợi nhớ; người chưa kết bạn hiện đúng tên; sửa app mở ở nền bị treo lúc đang kết nối (D21).
+- **1.2.1**: chữ thông báo không còn bị cắt giữa emoji — trước đây có thể làm SpringBoard iOS 6 sập, máy vào safe mode (D23).
 - **Chưa làm**: màn thông tin nhóm (danh sách thành viên), tắt thông báo / ghim chat từ app (lõi đã có `threads.mute`), tìm tin
   trong chat, tạo nhóm, lời mời kết bạn, khoá app; sao lưu Google Drive; lịch sử một số nhóm máy chủ không cho Zalo Web xem
   (`isFiltered`).

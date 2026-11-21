@@ -243,3 +243,15 @@ Thiết kế đầy đủ: [THIET-KE.md](THIET-KE.md).
   `Description` trong `Release` cũng viết không dấu. Thử trên máy dựng (bản sao kho Cydia): `Packages` dựng lại trùng MD5 với bản
   đang chạy; `control` có dấu → script dừng.
 - Trang mô tả (`depiction.html`) và trang giới thiệu là HTML (Cydia mở trong WebView, Safari) → giữ tiếng Việt có dấu.
+
+## D23. Chữ thông báo không được cắt giữa emoji — SpringBoard iOS 6 sập, máy vào safe mode — 21/11/2026 (bản 1.2.1)
+
+- iPhone 5 (iOS 6.1.4) vào safe mode; nhật ký sập của SpringBoard: `-[SBPushStore saveLocalNotification:forBundleID:]` →
+  `+[SBSystemLocalNotificationAlert localizedStringFromKey:defaultValue:inBundle:arguments:]` → hàm định dạng gọi
+  `[chữ UTF8String]` rồi đọc byte đầu không kiểm NULL. Chữ không rỗng mà `UTF8String` trả NULL = chữ có **nửa cặp surrogate**
+  (emoji chiếm 2 đơn vị UTF-16). Lần sập đó do GramMini (GramMini D36), nhưng Roza có y dòng cắt chữ:
+  `[body substringToIndex:180]` trong `notifyFor:` — tin dài có emoji vắt qua mốc 180 → nửa emoji → SpringBoard sập.
+- Sửa: `RZCut()` cắt theo ranh giới ký tự ghép (`rangeOfComposedCharacterSequenceAtIndex:`), `RZValidUTF16()` thay nửa surrogate
+  còn sót bằng U+FFFD; chữ thông báo tin mới và nhắc hẹn luôn qua `RZValidUTF16()`. Nhãn tin nhắn nhanh («/» — cắt 40) cũng dùng
+  `RZCut()`. Thử hàm trên Foundation của iOS 6 thật: cách cũ với emoji ở vị trí 179 → `UTF8String` NULL; cách mới đúng mọi vị trí.
+- Glass 6 (tweak giao diện) thêm chốt chặn trong SpringBoard: lọc nửa surrogate trước khi SpringBoard dùng chữ của thông báo.

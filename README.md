@@ -10,7 +10,7 @@ lõi **Rust** nói chuyện thẳng với máy chủ Zalo bằng giao thức Zal
 ## Máy chạy được
 
 iOS 5.0 – 6.1.x, đã jailbreak: iPhone 4 / 4S / 5, iPad 1 – 4 / mini 1, iPod touch 4 / 5. Đã chạy thử trên iPhone 5 (iOS 6.1.4),
-iPad mini 1 (iOS 6.1.3) và iPad 1 (iOS 5.1.1); kiểm ký hiệu bản 1.2.0: 428 / 428, thiếu 0. Trên iPad: màn chia đôi — danh
+iPad mini 1 (iOS 6.1.3) và iPad 1 (iOS 5.1.1); kiểm ký hiệu bản 1.2.1: 428 / 428, thiếu 0. Trên iPad: màn chia đôi — danh
 sách bên trái, cuộc trò chuyện bên phải (từ bản 1.1.0).
 
 ## Cài đặt
@@ -19,7 +19,7 @@ Cydia → Nguồn → Sửa → Thêm: **`https://itovn.github.io/Roza/cydia/`**
 mục Thông báo). Hướng dẫn chi tiết: **[itovn.github.io/Roza](https://itovn.github.io/Roza/)**. Tệp `.deb`: [Releases](https://github.com/itovn/Roza/releases).
 Đã cài rồi thì lên bản mới bằng Cydia → Thay đổi → Làm mới.
 
-## Có gì (bản 1.2.0)
+## Có gì (bản 1.2.1)
 
 - Đăng nhập bằng **mã QR** (quét bằng app Zalo trên điện thoại khác, như Zalo Web).
 - Thẻ **Tin nhắn / Danh bạ / Nhóm / Thêm**; ô tìm kiếm trên thanh trên; danh sách chat có ghim, tắt thông báo, số chưa đọc,

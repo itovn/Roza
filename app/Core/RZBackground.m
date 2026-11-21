@@ -192,9 +192,10 @@ static void RZVoipReadable(CFReadStreamRef stream, CFStreamEventType type, void 
         body = @"Bạn có tin nhắn mới";
     }
     if (!body.length) body = @"Tin nhắn mới";
-    if (body.length > 180) body = [[body substringToIndex:180] stringByAppendingString:@"…"];
+    body = RZCut(body, 180);
     UILocalNotification *ln = [[UILocalNotification alloc] init];
-    ln.alertBody = [NSString stringWithFormat:@"%@: %@", title, body];
+    // Chữ thông báo phải đổi được sang UTF-8: SpringBoard iOS 6 gọi UTF8String không kiểm NULL → sập, máy vào safe mode (D23)
+    ln.alertBody = RZValidUTF16([NSString stringWithFormat:@"%@: %@", title, body]);
     ln.alertAction = @"Xem";
     ln.userInfo = @{@"thread": RZStr([ev objectForKey:@"thread"]) ?: @"", @"name": chat};
     if (RZPref(RZPrefSound)) ln.soundName = UILocalNotificationDefaultSoundName;

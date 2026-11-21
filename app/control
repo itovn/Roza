@@ -1,6 +1,6 @@
 Package: vn.roza.app
 Name: Roza
-Version: 1.2.0
+Version: 1.2.1
 Architecture: iphoneos-arm
 Description: Nhan tin Zalo tren iPhone / iPad iOS 5 / iOS 6 (ung dung khong chinh thuc, dang nhap nhu Zalo Web).
 Maintainer: Roza

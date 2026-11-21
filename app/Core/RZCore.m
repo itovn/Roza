@@ -34,6 +34,31 @@ long long RZLL(id v) {
     return 0;
 }
 
+NSString *RZCut(NSString *s, NSUInteger max) {
+    if (s.length <= max) return s;
+    // Ký tự (ghép) chứa đơn vị thứ `max`: bắt đầu đúng ở `max` → cắt tại đó; vắt qua mốc → lùi về trước nó
+    NSUInteger end = [s rangeOfComposedCharacterSequenceAtIndex:max].location;
+    return [RZValidUTF16([s substringToIndex:end]) stringByAppendingString:@"…"];
+}
+
+NSString *RZValidUTF16(NSString *s) {
+    if (!s.length || [s UTF8String]) return s;
+    NSUInteger n = s.length;
+    unichar *buf = malloc(n * sizeof(unichar));
+    if (!buf) return @"";
+    [s getCharacters:buf range:NSMakeRange(0, n)];
+    for (NSUInteger i = 0; i < n; i++) {
+        if (CFStringIsSurrogateHighCharacter(buf[i]) && i + 1 < n && CFStringIsSurrogateLowCharacter(buf[i + 1])) {
+            i++;
+            continue;
+        }
+        if (CFStringIsSurrogateHighCharacter(buf[i]) || CFStringIsSurrogateLowCharacter(buf[i])) buf[i] = 0xFFFD;
+    }
+    NSString *r = [[NSString alloc] initWithCharacters:buf length:n];
+    free(buf);
+    return r;
+}
+
 NSString *RZCacheDir(void) {
     static NSString *dir;
     static dispatch_once_t once;

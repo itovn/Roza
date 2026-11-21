@@ -77,3 +77,8 @@ Còn mở:
   iPhone (320 điểm).
 - Lịch sử một số nhóm bị máy chủ lọc (`isFiltered`); sao lưu Google Drive.
 - Chưa làm: thông tin nhóm (thành viên), tắt thông báo / ghim từ app, tìm tin trong chat, tạo nhóm, lời mời kết bạn, khoá app.
+
+## 21/11/2026 — Bản 1.2.1: thông báo không làm SpringBoard sập
+
+- iPhone 5 vào safe mode vì một thông báo có nửa emoji (do GramMini cắt xem trước 180 đơn vị UTF-16). Roza có cùng dòng cắt chữ →
+  sửa bằng `RZCut()` / `RZValidUTF16()` cho thông báo tin mới, nhắc hẹn, nhãn tin nhắn nhanh (D23). Phát hành 1.2.1.

@@ -18,3 +18,8 @@ NSString *RZCacheDir(void);
 /// Giá trị JSON: NSNull → nil; kiểu sai → nil.
 NSString *RZStr(id v);
 long long RZLL(id v);
+/// Cắt chữ còn tối đa `max` đơn vị UTF-16 + «…», không cắt giữa một ký tự ghép (emoji = 2 đơn vị, chữ có dấu tổ hợp…).
+/// Nửa emoji làm `UTF8String` trả về NULL — SpringBoard iOS 6 sập (vào safe mode) khi lưu thông báo có chữ như vậy (D23).
+NSString *RZCut(NSString *s, NSUInteger max);
+/// Chữ đổi được sang UTF-8: thay nửa cặp surrogate còn sót bằng U+FFFD (chữ hợp lệ thì trả lại nguyên).
+NSString *RZValidUTF16(NSString *s);

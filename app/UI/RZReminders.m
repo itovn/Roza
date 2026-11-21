@@ -50,7 +50,7 @@ void RZScheduleReminder(NSDictionary *r, NSString *thread, NSString *chatName) {
     UILocalNotification *ln = [[UILocalNotification alloc] init];
     ln.fireDate = d;
     ln.timeZone = [NSTimeZone defaultTimeZone];
-    ln.alertBody = chatName.length ? [NSString stringWithFormat:@"⏰ %@ — %@", title, chatName] : [NSString stringWithFormat:@"⏰ %@", title];
+    ln.alertBody = RZValidUTF16(chatName.length ? [NSString stringWithFormat:@"⏰ %@ — %@", title, chatName] : [NSString stringWithFormat:@"⏰ %@", title]);
     ln.alertAction = @"Xem";
     ln.soundName = UILocalNotificationDefaultSoundName;
     ln.userInfo = @{@"thread": thread ?: @"", @"name": chatName ?: @"", @"reminder": rid};

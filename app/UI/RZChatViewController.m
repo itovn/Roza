@@ -970,7 +970,7 @@ static RZGeo RZLayout(NSDictionary *m, CGFloat W, int flags) {
         for (NSDictionary *q in items) {
             NSString *t = RZStr([q objectForKey:@"text"]);
             NSString *label = [NSString stringWithFormat:@"/%@ · %@", RZStr([q objectForKey:@"keyword"]),
-                                                         t.length > 40 ? [[t substringToIndex:40] stringByAppendingString:@"…"] : t];
+                                                         RZCut(t, 40)];
             [s add:[label stringByReplacingOccurrencesOfString:@"\n" withString:@" "] action:^{
                 [self insertQuick:q];
             }];
