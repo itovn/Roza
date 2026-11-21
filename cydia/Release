@@ -5,12 +5,12 @@ Version: 1.0
 Codename: ios6
 Architectures: iphoneos-arm
 Components: main
-Description: Roza — Zalo cho iPhone / iPad iOS 5 / iOS 6 đã jailbreak — https://itovn.github.io/Roza/
+Description: Roza - Zalo cho iPhone / iPad iOS 5 / iOS 6 da jailbreak - https://itovn.github.io/Roza/
 MD5Sum:
- dc472015794441654003e9d6cf0800c1 2019 Packages
- f9bd0ae4464117e6d9617748883f396b 696 Packages.gz
- 2d58d3f75179c424b3530a80b95663f5 850 Packages.bz2
+ be635db1ed1fccc0412c2e7ff95ded55 2019 Packages
+ 67b113a0709eae8ac0166d7a85b10469 692 Packages.gz
+ 1d2a6e0e6b0b8dfd15b2c3b73ab19962 846 Packages.bz2
 SHA256:
- 86ef8cfc0ebad777609f732a39171f6276bfb4f25424433080f3f84a07ceee9e 2019 Packages
- 86443aaadbf72e37b6c10a0d6e12d9622ff5e9b9449d6e944b2c3b106d0e5d4f 696 Packages.gz
- e232acb0663a58af7ab41f8b0b9061cc7e3347ebd74b627459127d298ada4911 850 Packages.bz2
+ 61c5cdfc97a6796bfc11c961784427fa4e209597ce33e3ba890f612c9d7e8bd5 2019 Packages
+ e6a50a531d6809827ded718c3cbbb4f06db3f80eb3ae8e9d39dcd5008135b3e6 692 Packages.gz
+ 48844890f40c204c460f0bb3b54a13dcac5c7245f6ce6be6601fda7cecbfd561 846 Packages.bz2

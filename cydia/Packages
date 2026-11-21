@@ -1,23 +1,4 @@
 Package: vn.roza.app
-Version: 1.0.0
-Architecture: iphoneos-arm
-Maintainer: Roza
-Installed-Size: 5664
-Depends: firmware (>= 5.0), mobilesubstrate
-Filename: debs/vn.roza.app_1.0.0_iphoneos-arm.deb
-Size: 3251318
-MD5sum: e39329285d4e0487312a474922bc9004
-SHA1: df674d9962b3aa40546cd419bf5cb440a1fdd21e
-SHA256: 52cb6facdefa43d76aa7855dbd7c1502566324ff74a48f5de93473ff5e0208db
-Section: Social
-Description: Nhan tin Zalo tren iPhone / iPad iOS 5 / iOS 6 (ung dung khong chinh thuc, dang nhap nhu Zalo Web).
-Author: Roza
-Icon: file:///Applications/Roza.app/Icon@2x.png
-Name: Roza
-Depiction: https://itovn.github.io/Roza/cydia/depiction.html
-Homepage: https://itovn.github.io/Roza/
-
-Package: vn.roza.app
 Version: 1.1.0
 Architecture: iphoneos-arm
 Maintainer: Roza
@@ -47,6 +28,25 @@ Size: 3422042
 MD5sum: 61553d77a9043af1506463f1c0eb49d3
 SHA1: d397de20d292e9b8f5de60219fda7e7bba9b898b
 SHA256: c1831876d3c4144f0151a91498394989573b5cb1f358d5b4f835cc8bd649cf0c
+Section: Social
+Description: Nhan tin Zalo tren iPhone / iPad iOS 5 / iOS 6 (ung dung khong chinh thuc, dang nhap nhu Zalo Web).
+Author: Roza
+Icon: file:///Applications/Roza.app/Icon@2x.png
+Name: Roza
+Depiction: https://itovn.github.io/Roza/cydia/depiction.html
+Homepage: https://itovn.github.io/Roza/
+
+Package: vn.roza.app
+Version: 1.2.1
+Architecture: iphoneos-arm
+Maintainer: Roza
+Installed-Size: 6008
+Depends: firmware (>= 5.0), mobilesubstrate
+Filename: debs/vn.roza.app_1.2.1_iphoneos-arm.deb
+Size: 3422468
+MD5sum: a5d6250f8b870a9f04f62a66c2898eb3
+SHA1: bd9d26278951ba961cf04702b93aea48fca8bc79
+SHA256: 84cd40e6857f9e537226deb4308302c26dd93393d4019ad688ed7e30f688177c
 Section: Social
 Description: Nhan tin Zalo tren iPhone / iPad iOS 5 / iOS 6 (ung dung khong chinh thuc, dang nhap nhu Zalo Web).
 Author: Roza
