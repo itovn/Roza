@@ -103,7 +103,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <img src="img/icon.png" alt="Biểu tượng Roza">
     <h1>Roza</h1>
     <p>Nhắn tin <b>Zalo</b> trên iPhone / iPad chạy <b>iOS 5</b> và <b>iOS 6</b> đã jailbreak — giao diện iOS 6, nhẹ, lõi Rust.</p>
-    <span class="ver">Bản 1.2.1</span>
+    <span class="ver">Bản 1.3.0</span>
   </div>
 
   <a class="btn rose" href="cydia://url/https://cydia.saurik.com/api/share#?source=https://itovn.github.io/Roza/cydia/">Thêm nguồn vào Cydia</a>
@@ -121,6 +121,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
 
   <h2>Tính năng</h2>
   <div class="group">
+    <div class="row"><div class="ic c7"><svg width="29" height="29" viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1C10.61 21 3 13.39 3 4c0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02z" fill="#fff" transform="translate(2.4 2.4) scale(.8)"/></svg></div><b>Gọi thoại (mới)</b><span>Gọi và nghe cuộc gọi Zalo 1-1. Khi Roza chạy nền, cuộc gọi đến hiện như cuộc gọi SIM: màn khoá tự sáng với «trượt để trả lời», nhạc chuông theo iPhone, cuộc gọi được ghi vào Điện thoại → Gần đây.</span></div>
     <div class="row"><div class="ic c2"><svg width="29" height="29" viewBox="0 0 29 29"><path d="M7 7h15a3 3 0 0 1 3 3v7a3 3 0 0 1-3 3h-8l-5 4v-4H7a3 3 0 0 1-3-3v-7a3 3 0 0 1 3-3z" fill="#fff"/></svg></div><b>Chat riêng và nhóm</b><span>Tin chữ, trả lời (trích dẫn), thu hồi, xoá ở phía mình, thả cảm xúc, «Đã xem», «đang soạn tin…»; ghim chat, tắt thông báo, số chưa đọc; tìm chat ngay trên thanh trên.</span></div>
     <div class="row"><div class="ic c3"><svg width="29" height="29" viewBox="0 0 29 29"><circle cx="14.5" cy="14.5" r="8.5" fill="#fff"/><ellipse cx="11.4" cy="12" rx="1.2" ry="1.5" fill="#d9741a"/><ellipse cx="17.6" cy="12" rx="1.2" ry="1.5" fill="#d9741a"/><path d="M10.5 16.5c1.2 1.6 2.5 2.4 4 2.4s2.8-.8 4-2.4" fill="none" stroke="#d9741a" stroke-width="1.6" stroke-linecap="round"/></svg></div><b>Sticker</b><span>Sticker của Zalo, cả sticker động chạy ngay trong chat; sticker gần đây, tìm sticker theo từ khoá.</span></div>
     <div class="row"><div class="ic c7"><svg width="29" height="29" viewBox="0 0 29 29"><rect x="5" y="7.5" width="19" height="14" rx="2.2" fill="#fff"/><path d="M7.5 19.5l4.5-5.5 3.5 3.5 2.5-2.5 3.5 4.5z" fill="#2fa43f"/><circle cx="19" cy="11.5" r="1.8" fill="#2fa43f"/></svg></div><b>Ảnh, video, tệp, tin nhắn thoại</b><span>Gửi ảnh / video từ thư viện hoặc máy ảnh (video tự nén), gửi tệp, ghi âm tin thoại; xem ảnh, phát video và tin thoại. Lưu ảnh / video vào Ảnh, tệp vào Tài liệu, hoặc «Mở bằng app khác…».</span></div>
@@ -150,6 +151,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row plain link"><a href="#sao-luu">Sao lưu và khôi phục qua Telegram</a></div>
     <div class="row plain link"><a href="#an">Trò chuyện ẩn</a></div>
     <div class="row plain link"><a href="#tien-ich">Nhắc hẹn, vị trí, chuyển khoản và các tiện ích khác</a></div>
+    <div class="row plain link"><a href="#goi-thoai">Gọi thoại</a></div>
     <div class="row plain link"><a href="#hoi-dap">Hỏi đáp</a></div>
   </div>
 
@@ -158,7 +160,7 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row plain"><b>1. Thêm nguồn Cydia</b><span>Mở Cydia → <b style="display:inline">Nguồn</b> → Sửa → Thêm, nhập <code>https://itovn.github.io/Roza/cydia/</code> rồi «Thêm nguồn». Hoặc mở trang này bằng Safari trên máy và chạm nút «Thêm nguồn vào Cydia» ở trên.</span></div>
     <div class="row plain"><b>2. Cài Roza</b><span>Trong nguồn vừa thêm, chọn «Roza» → Cài đặt → Xác nhận. Cài xong bấm <b style="display:inline">Restart SpringBoard</b> — cần một lần để Roza có mục trong Cài đặt → Thông báo.</span></div>
     <div class="row plain"><b>3. Mở Roza và đăng nhập</b><span>Quét mã QR bằng app Zalo trên điện thoại khác (xem mục dưới). Lần đầu iOS hỏi quyền gửi thông báo: chọn «OK».</span></div>
-    <div class="row plain"><b>Cài bằng tệp .deb</b><span>Tải tệp ở <a href="https://github.com/itovn/Roza/releases/latest">trang Releases</a>, chép vào máy rồi cài bằng iFile, hoặc qua SSH: <code>dpkg -i vn.roza.app_1.2.1_iphoneos-arm.deb</code> rồi <code>killall SpringBoard</code>. Cần có gói MobileSubstrate.</span></div>
+    <div class="row plain"><b>Cài bằng tệp .deb</b><span>Tải tệp ở <a href="https://github.com/itovn/Roza/releases/latest">trang Releases</a>, chép vào máy rồi cài bằng iFile, hoặc qua SSH: <code>dpkg -i vn.roza.app_1.3.0_iphoneos-arm.deb</code> rồi <code>killall SpringBoard</code>. Cần có gói MobileSubstrate.</span></div>
     <div class="row plain"><b>Cập nhật</b><span>Bản mới phát hành qua nguồn Cydia: Cydia → Thay đổi → Làm mới → Nâng cấp.</span></div>
   </div>
 
@@ -253,6 +255,14 @@ h2 { margin: 26px 12px 7px; font-size: 17px; color: #4c566c; text-shadow: 0 1px 
     <div class="row plain"><b>Thẻ tài khoản người khác gửi</b><span>Chạm vào thẻ → xem mã QR (nhập số tiền để có mã kèm số tiền), chép số tài khoản, hoặc lưu ảnh mã vào máy để quét bằng app ngân hàng.</span></div>
     <div class="row plain"><b>Tên gợi nhớ</b><span>Chạm tên trên thanh trên của màn chat → «Đặt tên gợi nhớ…», hoặc chạm giữ một người trong Danh bạ. Để trống để bỏ tên gợi nhớ.</span></div>
     <div class="row plain"><b>Lưu vào Telegram</b><span>Nối bot ở Thêm → Sao lưu (Telegram) trước (xem mục sao lưu ở trên). Sau đó chạm giữ một tin → «Lưu vào Telegram».</span></div>
+  </div>
+
+  <h2 id="goi-thoai">Gọi thoại</h2>
+  <div class="group">
+    <div class="row plain"><b>Gọi đi</b><span>Mở một cuộc trò chuyện riêng, chạm nút ống nghe ở góc phải thanh trên. Trong lúc gọi: Loa ngoài, Tắt micro, Kết thúc. Áp máy lên tai thì màn hình tự tắt.</span></div>
+    <div class="row plain"><b>Cuộc gọi đến</b><span>Roza đang mở: hiện màn cuộc gọi của Roza. Roza chạy nền: hiện như cuộc gọi SIM — đang dùng máy thì có nút Từ chối / Trả lời, máy khoá thì màn tự sáng với «trượt để trả lời» (máy có mật mã thì nhập mật mã để vào cuộc gọi). Nhạc chuông theo nhạc chuông của iPhone; công tắc im lặng thì chỉ rung.</span></div>
+    <div class="row plain"><b>Tuỳ chọn</b><span>Thêm → Thông báo → Cuộc gọi: Nhạc chuông, Cuộc gọi đến kiểu hệ thống, Ghi vào Gần đây (app Điện thoại), Tự mở lại khi bị tắt.</span></div>
+    <div class="row plain"><b>Lưu ý</b><span>Để nhận được cuộc gọi đến, Roza khai phiên đăng nhập là Zalo PC — nếu tài khoản đang đăng nhập Zalo PC trên máy tính, máy tính đó có thể bị đăng xuất. Chưa có gọi video và gọi nhóm.</span></div>
   </div>
 
   <h2 id="hoi-dap">Hỏi đáp</h2>
